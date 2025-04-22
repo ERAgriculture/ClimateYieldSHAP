@@ -1,0 +1,442 @@
+---
+title: "Understanding the ERA Climate-Yield Relationship Visualization Script"
+author: "ERA Visualization Guide"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, echo = TRUE)
+```
+
+# Introduction
+
+This document explains the R script used to create a heatmap visualization showing climate-yield relationships across different Agro-Ecological Zones (AEZs) for the ERA (Evidence for Resilient Agriculture) project. The script generates a matrix visualization where each cell represents the relationship between a climate variable and crop yield in a specific agro-ecological zone.
+
+# Script Overview
+
+The script creates a sophisticated heatmap visualization that combines:
+1. Color-coded cells showing the magnitude of climate variable impacts on yield
+2. Symbols indicating the type of relationship (positive, negative, inverse-U shaped, or no relationship)
+3. Organized layout with different agro-ecological zones as columns and climate variables as rows
+4. Custom color scales for different relationship types
+
+# Libraries and Dependencies
+
+```{r libraries}
+library(ggnewscale)   # For using multiple color scales in a single plot
+library(ggplot2)      # Core plotting functionality
+library(tidyr)        # For data reshaping
+library(dplyr)        # For data manipulation
+library(scales)       # For scale functions
+library(showtext)     # For font handling
+library(ggtext)       # For enhanced text rendering in ggplot2
+library(purrr)        # For functional programming tools
+library(stringr)      # For string manipulation
+library(tibble)       # For enhanced data frames
+
+source('R/calculate_impact_range.R')  # Custom function for calculating climate impact ranges
+```
+
+# Initial Configuration
+
+```{r configuration}
+text_size <- 5  # Base text size for the plot
+
+plot_type <- "GAMCI_shap_plot_"  # Type of SHAP plot to use
+
+experiment_t <- "no_outliers_eco_isqrt_nosoil"  # Experiment identifier
+
+# Define list of agro-ecological zones
+AEZ_list <- c("Warm.Semiarid", "Warm.Subhumid", "Warm.Humid",
+              "Cool.Semiarid", "Cool.Subhumid", "Cool.Humid")
+
+# Mapping of technical variable names to readable names
+feature_mapping <- c(
+  "Rain.Days.L.1" = "Fraction_Rainy_Days",
+  "Rain.sum" = "Total_Rainfall",
+  "Rain.sum.Dev.Mean" = "Total_Rainfall_Dev",
+  "Tmax.mean" = "Avg_Max_Temp",
+  "Rain.Days.L.1.Dev.Mean" = "Fraction_Rainy_Days_Dev",
+  "Rain.Max.RSeq.5" = "Longest_Dry_Spell",
+  "Tmax.mean.Dev.Mean" = "Avg_Max_Temp_Dev",
+  "yield" = "Yield"
+)
+
+# Extract feature list (excluding yield)
+feature_list <- unname(feature_mapping)[-8]
+```
+
+The script begins by setting up basic parameters, including text size, the experiment identifier, and lists of the agro-ecological zones and climate features to include in the visualization. It also defines a mapping between technical variable names and more readable names for display.
+
+# Data Processing and Impact Calculation
+
+```{r data_processing}
+# Calculate impact ranges for each feature in each AEZ
+impact_results <- crossing(AEZ = AEZ_list, variable = feature_list) %>%
+  mutate(
+    experiment = paste0(experiment_t, "_", AEZ),
+    full_results = map(experiment, ~readRDS(paste0('outputs/', .x, '/full_results/full_results.rds'))),
+    mean_yield = map_dbl(full_results, ~mean(.x$shap_values$Yield)),
+    effect = map2(full_results, variable, ~calculate_impact_range(
+      x_values = .x$shap_values %>% pull(.y),
+      y_values = .x$shap_values %>% pull(paste0("SHAP_", .y)),
+      noise_threshold = 0.3,
+      window_size = 0.1,
+      min_dev_explained = 0.2
+    )),
+    impact_range = map_dbl(effect, ~as.numeric(.x$impact_range)),
+    deviance_explained = map_dbl(effect, ~.x$deviance_explained),
+    noise_level = map_dbl(effect, ~.x$noise_level)
+  ) %>%
+  select(AEZ, variable, impact_range, deviance_explained, noise_level, mean_yield) %>% 
+  mutate(norm_impact = impact_range/mean_yield)
+```
+
+This section creates a dataset containing impact measures for each climate variable in each AEZ:
+
+1. For each combination of AEZ and climate variable, it loads model results from previously saved files
+2. Calculates the mean yield for each AEZ
+3. Uses a custom function `calculate_impact_range()` to determine:
+   - The impact range (maximum effect on yield)
+   - The deviance explained (how well the model captures the relationship)
+   - The noise level (how much randomness exists in the relationship)
+4. Calculates the normalized impact (impact range divided by mean yield)
+
+# Relationship Type Definition
+
+```{r relationship_types}
+# Define relationship types for each variable and AEZ
+df_relationship_all <- data.frame(
+  "Warm.Semiarid" = c("Inverse-U", "Positive", "Positive", "Negative", 
+                       " ", "Inverse-U", "Negative"),
+  "Warm.Subhumid" = c("Inverse-U", "Inverse-U", "Inverse-U", "Negative", 
+                       " ", "Inverse-U", "Inverse-U"),
+  "Warm.Humid" =    c(" ", "Negative", "Positive", " ", 
+                       " ", "Inverse-U", "Inverse-U"),
+  
+  "Cool.Semiarid" = c("Negative", "Inverse-U", "Negative", "Negative", 
+                       "Positive", "Negative", "Inverse-U"),
+  "Cool.Subhumid" = c("Inverse-U", "Inverse-U", "Positive", "Negative", 
+                       "Inverse-U", "Inverse-U", "Inverse-U"),
+  "Cool.Humid" =    c(" ", " ", "Inverse-U", " ", 
+                       "Negative", "Negative", "Negative")
+)
+row.names(df_relationship_all) = feature_list
+```
+
+This section defines the type of relationship between each climate variable and crop yield for each AEZ. The relationships are manually coded based on expert analysis of the SHAP plots and are categorized as:
+
+- "Positive": Increasing the variable generally increases yield
+- "Negative": Increasing the variable generally decreases yield
+- "Inverse-U": The relationship is non-linear, with yield increasing up to a point and then decreasing
+- " " (empty string): No significant relationship
+
+# Data Preparation for Visualization
+
+```{r data_preparation}
+# Reshape relationship data to long format
+relationships_long <- df_relationship_all %>%
+  rownames_to_column("variable") %>%
+  pivot_longer(
+    cols = -variable,
+    names_to = "AEZ",
+    values_to = "relationship_type"
+  )
+
+# Merge impact data with relationship types
+df_combined <- impact_results %>%
+  left_join(relationships_long, by = c("AEZ", "variable"))
+
+# Define custom ordering for AEZs and features
+AEZ_order <- c("Warm.Semiarid", "Cool.Semiarid", 
+               "Warm.Subhumid", "Cool.Subhumid", 
+               "Warm.Humid", "Cool.Humid")
+feature_order <- c("Fraction_Rainy_Days_Dev", "Fraction_Rainy_Days", "Longest_Dry_Spell", 
+                   "Total_Rainfall_Dev", "Total_Rainfall", "Avg_Max_Temp_Dev", "Avg_Max_Temp")
+
+# Apply ordering to data
+df_combined <- df_combined %>%
+  mutate(
+    AEZ = factor(AEZ, levels = AEZ_order),
+    variable = factor(variable, levels = feature_order)
+  )
+
+# Create separate datasets for each relationship type
+positive_data <- df_combined %>% filter(relationship_type == "Positive")
+negative_data <- df_combined %>% filter(relationship_type == "Negative") 
+inverse_u_data <- df_combined %>% filter(relationship_type == "Inverse-U")
+flat_data <- df_combined %>% filter(relationship_type == " ")
+
+# Find the maximum impact value for consistent color scaling
+max_value <- max(df_combined$impact_range, na.rm = TRUE)
+```
+
+This section prepares the data for visualization:
+
+1. Reshapes the relationship data from wide to long format
+2. Merges relationship types with impact values
+3. Defines custom orderings for AEZs (organizing by temperature regime and aridity) and features (grouping related variables)
+4. Creates separate datasets for each relationship type (positive, negative, inverse-U, no relationship)
+5. Calculates the maximum impact value to ensure consistent color scaling
+
+# Creating the Visualization
+
+```{r create_visualization}
+# Create the heatmap plot with multiple color scales
+p <- ggplot(df_combined, aes(x = AEZ, y = variable)) +
+  # Base white background for all cells
+  geom_tile(color = "white", fill = "white") +
+  
+  # Positive relationship tiles
+  geom_tile(data = positive_data, 
+            aes(fill = impact_range), 
+            color = "white") +
+  scale_fill_gradient("Positive (↗)", 
+                      low = "#E6E6FF", high = "#1E3A8A",
+                      limits = c(0, max_value),
+                      breaks = seq(0, 2000, length.out = 3),
+                      guide = guide_colorbar(title.position = "top", 
+                                             direction = "horizontal",
+                                             barwidth = 2.2,
+                                             barheight = 0.4,
+                                             order = 1,
+                                             title.theme = element_text(size = 4),
+                                             label.theme = element_text(size = 3)
+                                             )) +
+  
+  # New scale for Negative
+  new_scale_fill() +
+  geom_tile(data = negative_data, 
+            aes(fill = impact_range), 
+            color = "white") +
+  scale_fill_gradient("Negative (↘)", 
+                      low = "#FFE6E6", high = "#B22222",
+                      limits = c(0, max_value),
+                      breaks = seq(0, 2000, length.out = 3),
+                      guide = guide_colorbar(title.position = "top", 
+                                             direction = "horizontal",
+                                             barwidth = 2.2,
+                                             barheight = 0.4,
+                                             order = 2,
+                                             title.theme = element_text(size = 4),
+                                             label.theme = element_text(size = 3)
+                                             )) +
+  
+  # New scale for Inverse-U
+  new_scale_fill() +
+  geom_tile(data = inverse_u_data, 
+            aes(fill = impact_range), 
+            color = "white") +
+  scale_fill_gradient("Inverse-U (∩)", 
+                      low = "#FFF6E6", high = "#B8860B",
+                      limits = c(0, max_value),
+                      breaks = seq(0, 2000, length.out = 3),
+                      guide = guide_colorbar(title.position = "top", 
+                                             direction = "horizontal",
+                                             barwidth = 2.2,
+                                             barheight = 0.4,
+                                             order = 3,
+                                             title.theme = element_text(size = 4),
+                                             label.theme = element_text(size = 3)
+                                             )) +
+  
+  # New scale for No relationship
+  new_scale_fill() +
+  geom_tile(data = flat_data,
+            aes(fill = " "),
+            color = "white") +
+  scale_fill_manual(values = c(" " = "white"),
+                    name = "No relationship (-)",
+                    guide = guide_legend(title.position = "top",
+                                         order = 4,
+                                         title.theme = element_text(size = 4),
+                                         label.theme = element_text(size = 3)
+                                         )) +
+  
+  # Add symbols
+  geom_text(aes(label = case_when(
+    relationship_type == "Positive" ~ "↗",
+    relationship_type == "Negative" ~ "↘",
+    relationship_type == "Inverse-U" ~ "∩",
+    TRUE ~ "-"
+  )), size = 5, family = "Arial Unicode MS") +
+  
+  # Axis labels with breaks
+  scale_x_discrete(labels = function(x) gsub("\\.", "\n", x)) +
+  
+  # Custom y-axis labels with better readability
+  scale_y_discrete(labels = c(
+    "Fraction_Rainy_Days_Dev" = "Fraction Rainy\nDays Deviation",
+    "Fraction_Rainy_Days" = "Fraction Rainy Days",
+    "Longest_Dry_Spell" = "Longest Dry Spell",
+    "Total_Rainfall_Dev" = "Total Rainfall Deviation",
+    "Total_Rainfall" = "Total Rainfall",
+    "Avg_Max_Temp_Dev" = "Average Maximum\nTemperature Deviation",
+    "Avg_Max_Temp" = "Average Maximum\nTemperature"
+  )) +
+  
+  # Apply theme settings
+  theme_minimal() +
+  theme(
+    text = element_text(family = "Arial Unicode MS"),
+    panel.grid = element_blank(),
+    legend.position = "bottom",
+    legend.box = "horizontal",
+    legend.spacing.x = unit(0.2, "cm"),
+    legend.margin = margin(0, 0, 0, 0),
+    legend.title = element_text(family = "Helvetica", size = text_size),
+    legend.text = element_text(family = "Helvetica", size = text_size),
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5),
+    plot.caption = element_text(hjust = 0.5),
+    axis.text.x = element_text(hjust = 0.5,
+                               family = "Helvetica", size = text_size),
+    axis.text.y = element_text(family = "Helvetica", size = text_size, hjust = 0.5)
+  ) +
+  labs(
+    title = "",
+    x = "",
+    y = ""
+  )
+```
+
+This section creates the heatmap visualization with several sophisticated features:
+
+1. **Multiple Color Scales**: Uses the `ggnewscale` package to apply different color scales for each relationship type:
+   - Blue scale for positive relationships
+   - Red scale for negative relationships
+   - Gold/brown scale for inverse-U relationships
+   - White for no relationship
+
+2. **Symbol Overlays**: Adds directional symbols to each cell to indicate the relationship type:
+   - ↗ for positive relationships
+   - ↘ for negative relationships
+   - ∩ for inverse-U relationships
+   - - for no relationship
+
+3. **Custom Axis Labels**: Formats AEZ names and variable names for better readability
+
+4. **Consistent Color Scaling**: Uses the same scale limits across all relationship types for consistent comparison
+
+5. **Carefully Arranged Legends**: Orders and formats the legends for clarity
+
+# Saving the Visualization
+
+```{r save_visualization}
+# Function to create and save PNG version with larger text and white background
+save_png_version <- function(plot, filename, text_scale_factor = 10, symbol_scale_factor = 2) {
+  # Create a copy of the plot
+  png_plot <- plot
+  
+  # Access the text layer (symbols) and update its size
+  if(length(png_plot$layers) >= 6) {
+    # The 6th layer is the geom_text with symbols
+    current_size <- png_plot$layers[[6]]$aes_params$size
+    if(is.null(current_size)) {
+      current_size <- 5  # Default from your original code
+    }
+    
+    # Update the size parameter in the layer
+    png_plot$layers[[6]]$aes_params$size <- current_size * symbol_scale_factor * 3
+  }
+  
+  # Add theme modifications for text elements
+  png_plot <- png_plot +
+    theme(
+      # Adjust axis text with tighter line spacing
+      axis.text.x = element_text(hjust = 0.5, 
+                                 family = "Helvetica", 
+                                 size = text_size * text_scale_factor,
+                                 lineheight = 0.4),  # Reduced line spacing
+      axis.text.y = element_text(family = "Helvetica", 
+                                 size = text_size * text_scale_factor, 
+                                 hjust = 0.5,
+                                 lineheight = 0.4),  # Reduced line spacing
+      
+      # Basic text elements
+      legend.title = element_text(family = "Helvetica", size = text_size * text_scale_factor),
+      legend.text = element_text(family = "Helvetica", size = text_size * text_scale_factor),
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.background = element_rect(fill = "white", color = NA)
+    )
+  
+  # Save with larger dimensions
+  ggsave(filename, 
+         plot = png_plot,
+         width = 88 * 3, 
+         height = 88 * 3, 
+         units = "mm",
+         dpi = 300,
+         bg = "white")
+}
+
+# Save the PDF (original size)
+ggsave(paste0("final_results/", experiment_t, "_climate_yield.pdf"), 
+       plot = p,
+       width = 88, 
+       height = 88, 
+       units = "mm",
+       dpi = 600)
+
+# Save the PNG (scaled up for better text visibility)
+save_png_version(p, paste0("final_results/", experiment_t, "_climate_yield.png"))
+```
+
+The final section saves the visualization in two formats:
+
+1. **PDF**: Saved at the original size (88 x 88 mm) with high resolution (600 DPI)
+2. **PNG**: Saved with a custom function that:
+   - Increases text size for better readability
+   - Enlarges the symbols for clarity
+   - Expands the overall dimensions (3x larger)
+   - Ensures a clean white background
+
+The `save_png_version()` function specifically modifies the plot to make it more suitable for web display and presentations, while the PDF version maintains a compact size suitable for publication in academic journals.
+
+# Understanding the Visualization
+
+The final heatmap offers several key insights:
+
+## Relationship Types
+
+Each cell shows one of four relationship types between a climate variable and crop yield:
+
+1. **Positive (↗, blue)**: Increasing the climate variable generally increases yield
+2. **Negative (↘, red)**: Increasing the climate variable generally decreases yield
+3. **Inverse-U (∩, gold)**: A non-linear relationship where yield increases up to an optimal point, then decreases
+4. **No relationship (-, white)**: No significant effect of the climate variable on yield
+
+## Color Intensity
+
+The intensity of each color represents the magnitude of the impact:
+
+- **Darker colors**: Stronger impact on yield
+- **Lighter colors**: Weaker impact on yield
+
+## Comparing Across AEZs
+
+The grid layout facilitates comparison across different agro-ecological zones:
+
+- **By column**: Compare how the same variable affects yield differently across AEZs
+- **By row**: Compare which variables have the strongest effects within each AEZ
+- **Temperature patterns**: Compare warm vs. cool regions (adjacent columns)
+- **Moisture patterns**: Compare across moisture gradients (semiarid → subhumid → humid)
+
+# Conclusion
+
+This visualization script creates a powerful tool for understanding climate-yield relationships across different agro-ecological zones in Africa. By combining color-coding, symbols, and carefully organized data, it presents complex information in an accessible format.
+
+The resulting heatmap can help:
+
+1. **Researchers** identify key climate drivers of yield in different regions
+2. **Policymakers** understand which climate variables to prioritize in adaptation strategies
+3. **Agricultural advisors** develop region-specific recommendations for farmers
+4. **Climate scientists** see how climate variables interact with agricultural systems
+
+This type of visualization bridges the gap between complex statistical models and practical decision-making in agricultural climate adaptation.

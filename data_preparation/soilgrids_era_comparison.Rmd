@@ -1,0 +1,196 @@
+---
+title: "Comparing SoilGrids and ERA Soil Properties"
+author: "Álvaro Carmona-Cabrero"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    fig_width: 8
+    fig_height: 6
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 8,
+  fig.height = 6,
+  out.width = "100%"
+)
+```
+
+## Introduction
+
+This vignette demonstrates how to compare soil properties between two data sources: SoilGrids and ERA databases. We'll examine correlations between key soil properties (organic carbon, pH, clay, sand, and silt) and visualize the relationships using scatter plots and correlation matrices.
+
+## Setup and Data Loading
+
+First, we load the necessary libraries and our dataset:
+
+```{r load-libraries-data}
+# Load necessary libraries
+library(tidyverse)
+library(ggplot2)
+library(corrplot)
+library(data.table)
+
+# Load dataset
+data <- read.csv("outputs/era/base_ecocrop.csv")
+data <- unique(data)
+
+# pH correction (dividing by 10)
+data$Mean_ph_h2o <- data$Mean_ph_h2o/10
+
+# Preview data structure
+str(data[, c("Mean_oc", "SOC", "Mean_ph_h2o", "Soil.pH", "Mean_clay_tot_psa", 
+            "CLY", "Mean_sand_tot_psa", "SND", "Mean_silt_tot_psa", "SLT")])
+```
+
+## Data Preparation
+
+Let's rename variables for clarity and consistency:
+
+```{r rename-variables}
+data_renamed <- data %>%
+  rename(
+    # SoilGrids variables
+    soilgrids_oc = Mean_oc,
+    soilgrids_ph = Mean_ph_h2o,
+    soilgrids_clay = Mean_clay_tot_psa,
+    soilgrids_sand = Mean_sand_tot_psa,
+    soilgrids_silt = Mean_silt_tot_psa,
+    
+    # ERA variables
+    era_oc = SOC,
+    era_ph = Soil.pH,
+    era_clay = CLY,
+    era_sand = SND,
+    era_silt = SLT
+  )
+
+# Preview the renamed data
+head(data_renamed[, c("soilgrids_oc", "era_oc", "soilgrids_ph", "era_ph", 
+                     "soilgrids_clay", "era_clay", "soilgrids_sand", "era_sand", 
+                     "soilgrids_silt", "era_silt")])
+```
+
+## Create Comparison Function
+
+Define a function to create consistent scatter plots for comparing soil properties:
+
+```{r comparison-function}
+# Function to create cleaner comparison plots for soil properties
+compare_soil_properties <- function(data, soilgrids_var, era_var, x_label, y_label) {
+  complete_data <- data %>% 
+    filter(!is.na(!!sym(soilgrids_var)), !is.na(!!sym(era_var)))
+  
+  pearson_corr <- cor(complete_data[[soilgrids_var]], complete_data[[era_var]], 
+                      use = "complete.obs", method = "pearson")
+  
+  p <- ggplot(complete_data, aes_string(x = soilgrids_var, y = era_var)) +
+    geom_point(alpha = 0.5) +
+    geom_smooth(method = "lm", color = "red") +
+    labs(
+      subtitle = paste0("r = ", round(pearson_corr, 3)),
+      x = x_label,
+      y = y_label
+    ) +
+    theme_minimal() +
+    theme(plot.title = element_blank(),
+          plot.background = element_rect(fill = "white", color = NA),
+          panel.background = element_rect(fill = "white", color = NA),
+          panel.grid.major = element_line(color = "gray90"),
+          panel.grid.minor = element_line(color = "gray95"))
+  
+  return(p)
+}
+```
+
+## Define Soil Property Comparisons
+
+Specify the soil properties to compare:
+
+```{r define-comparisons}
+# Define soil property pairs to compare with clean labels
+soil_comparisons <- list(
+  list(soilgrids_var = "soilgrids_oc", era_var = "era_oc", 
+       x_label = "SoilGrids OC", y_label = "ERA OC"),
+  list(soilgrids_var = "soilgrids_ph", era_var = "era_ph", 
+       x_label = "SoilGrids pH", y_label = "ERA pH"),
+  list(soilgrids_var = "soilgrids_clay", era_var = "era_clay", 
+       x_label = "SoilGrids Clay", y_label = "ERA Clay"),
+  list(soilgrids_var = "soilgrids_sand", era_var = "era_sand", 
+       x_label = "SoilGrids Sand", y_label = "ERA Sand"),
+  list(soilgrids_var = "soilgrids_silt", era_var = "era_silt", 
+       x_label = "SoilGrids Silt", y_label = "ERA Silt")
+)
+```
+
+## Generate and Display Comparison Plots
+
+Create scatter plots for each soil property comparison:
+
+```{r generate-plots, fig.width=8, fig.height=6}
+# Generate plots
+scatter_plots <- list()
+for (comp in soil_comparisons) {
+  scatter_plots[[comp$x_label]] <- compare_soil_properties(
+    data_renamed, comp$soilgrids_var, comp$era_var, comp$x_label, comp$y_label)
+  print(scatter_plots[[comp$x_label]])
+  ggsave(paste0("outputs/era/soil_comparison_", comp$era_var, ".png"))
+}
+```
+
+## Correlation Analysis
+
+Calculate and visualize the correlation matrix for all soil variables:
+
+```{r correlation-matrix}
+soil_vars <- c("soilgrids_oc", "era_oc", "soilgrids_ph", "era_ph", 
+               "soilgrids_clay", "era_clay", "soilgrids_sand", "era_sand", 
+               "soilgrids_silt", "era_silt")
+
+# Filter complete cases for correlation analysis
+soil_data <- data_renamed %>% select(all_of(soil_vars)) %>% drop_na()
+
+# Calculate Pearson correlation
+cor_matrix <- cor(soil_data, method = "pearson")
+
+# Define clean labels for the correlation plot
+clean_labels <- c("SG OC", "ERA OC", "SG pH", "ERA pH", 
+                  "SG Clay", "ERA Clay", "SG Sand", "ERA Sand", 
+                  "SG Silt", "ERA Silt")
+
+# Rename matrix dimensions
+colnames(cor_matrix) <- clean_labels
+rownames(cor_matrix) <- clean_labels
+
+# Display correlation matrix
+round(cor_matrix, 2)
+```
+
+## Correlation Visualization
+
+Create a correlation plot to visualize the relationships:
+
+```{r correlation-plot, fig.height=8, fig.width=8}
+# Create correlation plot
+corrplot(cor_matrix, method = "color", type = "upper", 
+         tl.col = "black", tl.srt = 45,
+         tl.cex = 0.8, 
+         diag = FALSE,
+         title = "Correlation Between SoilGrids and ERA Soil Properties",
+         mar = c(0,0,1,0))
+
+# Save correlation plot
+png("outputs/era/soil_correlation_plot.png", width = 8, height = 8, units = "in", res = 300)
+corrplot(cor_matrix, method = "color", type = "upper", 
+         tl.col = "black", tl.srt = 45,
+         tl.cex = 0.8,
+         diag = FALSE)
+dev.off()
+```

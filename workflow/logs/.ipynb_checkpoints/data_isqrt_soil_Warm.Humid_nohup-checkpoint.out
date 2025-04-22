@@ -1,0 +1,430 @@
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ forcats   1.0.0     ✔ readr     2.1.5
+✔ ggplot2   3.5.0     ✔ tibble    3.2.1
+✔ lubridate 1.9.3     ✔ tidyr     1.3.1
+✔ purrr     1.0.2     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+── Attaching packages ────────────────────────────────────── tidymodels 1.2.0 ──
+✔ broom        1.0.5      ✔ rsample      1.2.1 
+✔ dials        1.3.0      ✔ tune         1.2.1 
+✔ infer        1.0.7      ✔ workflows    1.1.4 
+✔ modeldata    1.3.0      ✔ workflowsets 1.1.0 
+✔ parsnip      1.2.1      ✔ yardstick    1.3.1 
+✔ recipes      1.0.10     
+── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
+✖ scales::discard() masks purrr::discard()
+✖ dplyr::filter()   masks stats::filter()
+✖ recipes::fixed()  masks stringr::fixed()
+✖ dplyr::lag()      masks stats::lag()
+✖ yardstick::spec() masks readr::spec()
+✖ recipes::step()   masks stats::step()
+• Learn how to get started at https://www.tidymodels.org/start/
+
+Attaching package: ‘vip’
+
+The following object is masked from ‘package:utils’:
+
+    vi
+
+
+Attaching package: ‘pdp’
+
+The following object is masked from ‘package:purrr’:
+
+    partial
+
+Loading required package: DALEX
+Welcome to DALEX (version: 2.4.3).
+Find examples and detailed introduction at: http://ema.drwhy.ai/
+
+
+Attaching package: ‘DALEX’
+
+The following object is masked from ‘package:vip’:
+
+    titanic
+
+The following objects are masked from ‘package:treeshap’:
+
+    colors_breakdown_drwhy, colors_discrete_drwhy, theme_drwhy,
+    theme_drwhy_vertical
+
+The following object is masked from ‘package:dplyr’:
+
+    explain
+
+
+Attaching package: ‘rpart’
+
+The following object is masked from ‘package:dials’:
+
+    prune
+
+
+Attaching package: ‘rlang’
+
+The following objects are masked from ‘package:purrr’:
+
+    %@%, flatten, flatten_chr, flatten_dbl, flatten_int, flatten_lgl,
+    flatten_raw, invoke, splice
+
+Linking to GEOS 3.12.1, GDAL 3.8.3, PROJ 9.3.1; sf_use_s2() is TRUE
+
+Attaching package: ‘rnaturalearthdata’
+
+The following object is masked from ‘package:rnaturalearth’:
+
+    countries110
+
+Linking to librsvg 2.52.5
+Loading required package: carData
+
+Attaching package: ‘car’
+
+The following object is masked from ‘package:purrr’:
+
+    some
+
+The following object is masked from ‘package:dplyr’:
+
+    recode
+
+Loading required package: lattice
+
+Attaching package: ‘caret’
+
+The following objects are masked from ‘package:yardstick’:
+
+    precision, recall, sensitivity, specificity
+
+The following object is masked from ‘package:purrr’:
+
+    lift
+
+corrplot 0.92 loaded
+
+Attaching package: ‘fastshap’
+
+The following objects are masked from ‘package:DALEX’:
+
+    explain, titanic
+
+The following object is masked from ‘package:vip’:
+
+    gen_friedman
+
+The following object is masked from ‘package:dplyr’:
+
+    explain
+
+
+Attaching package: ‘janitor’
+
+The following objects are masked from ‘package:stats’:
+
+    chisq.test, fisher.test
+
+
+Attaching package: ‘plotly’
+
+The following object is masked from ‘package:ggplot2’:
+
+    last_plot
+
+The following object is masked from ‘package:stats’:
+
+    filter
+
+The following object is masked from ‘package:graphics’:
+
+    layout
+
+
+Attaching package: ‘xgboost’
+
+The following object is masked from ‘package:plotly’:
+
+    slice
+
+The following object is masked from ‘package:dplyr’:
+
+    slice
+
+Warning message:
+In normalizePath("/Users/alvaro/My Drive (acarmonacabrero@gmail.com)/Atlas Alvaro/workflow") :
+  path[1]="/Users/alvaro/My Drive (acarmonacabrero@gmail.com)/Atlas Alvaro/workflow": No such file or directory
+
+Data Preprocessing Summary:
+----------------------------
+
+1. Columns with missing values after imputation:
+   - T.NO: 83 missing values
+   - T.NI: 157 missing values
+   - Elevation: 2093 missing values
+   - MAT: 3205 missing values
+   - MAP: 2236 missing values
+   - TAP: 3918 missing values
+   - MSP: 4156 missing values
+   - TSP: 3878 missing values
+   - SOC: 2890 missing values
+   - SOC.Depth: 2878 missing values
+   - Soil.pH: 1773 missing values
+   - Harvest.Start: 1376 missing values
+   - Harvest.End: 1376 missing values
+   - Plot.Size: 504 missing values
+   - Season.Start: 2833 missing values
+   - Season.End: 2833 missing values
+   - Upper: 4893 missing values
+   - Lower: 4893 missing values
+   - MeanT.Error: 2521 missing values
+   - MeanC.Error: 2517 missing values
+   - Lat: 4780 missing values
+   - Lon: 4795 missing values
+   - Season: 2833 missing values
+   - Data.PS.Date: 4615 missing values
+   - Data.PE.Date: 4615 missing values
+   - SLen: 1376 missing values
+   - Data.SLen: 3533 missing values
+   - Rain.Start.End: 2274 missing values
+   - UnC.CHIRPS.P.Date: 2313 missing values
+   - M.Year.Code: 2833 missing values
+   - H.Diff: 1376 missing values
+
+2. Near-zero variance predictors detected (numeric only):
+   - T.NO
+   - Outcode
+   - Upper
+   - Lower
+   - Topt.low
+   - Topt.high
+   - Tlow
+   - Thigh
+   - cycle_min
+   - cycle_max
+   - SLen.EcoCrop
+   - GDDmax
+   - ETo.NA
+   - W.Start
+   - GDDmax.Dev.Mean
+   - GDDmax.Dev.Median
+   - Median_bdr
+   - Mode_bdr
+   Consider removing these predictors.
+# Resampling results
+# 5-fold cross-validation using stratification 
+# A tibble: 5 × 5
+  splits           id    .metrics         .notes           .predictions     
+  <list>           <chr> <list>           <list>           <list>           
+1 <split [176/44]> Fold1 <tibble [3 × 4]> <tibble [0 × 3]> <tibble [44 × 4]>
+2 <split [176/44]> Fold2 <tibble [3 × 4]> <tibble [0 × 3]> <tibble [44 × 4]>
+3 <split [176/44]> Fold3 <tibble [3 × 4]> <tibble [0 × 3]> <tibble [44 × 4]>
+4 <split [176/44]> Fold4 <tibble [3 × 4]> <tibble [0 × 3]> <tibble [44 × 4]>
+5 <split [176/44]> Fold5 <tibble [3 × 4]> <tibble [0 × 3]> <tibble [44 × 4]>
+Model has been saved as: model_output/data_isqrt_soil_Warm.Humid/tuning/models/linear_reg_best_model.rds 
+# A tibble: 3 × 6
+  .metric .estimator     mean     n std_err .config             
+  <chr>   <chr>         <dbl> <int>   <dbl> <chr>               
+1 mae     standard    819.        5 41.5    Preprocessor1_Model1
+2 rmse    standard   1078.        5 94.4    Preprocessor1_Model1
+3 rsq     standard      0.151     5  0.0545 Preprocessor1_Model1
+# Tuning results
+# 5-fold cross-validation using stratification 
+# A tibble: 5 × 5
+  splits           id    .metrics           .notes           .predictions
+  <list>           <chr> <list>             <list>           <list>      
+1 <split [176/44]> Fold1 <tibble [576 × 9]> <tibble [0 × 3]> <tibble>    
+2 <split [176/44]> Fold2 <tibble [576 × 9]> <tibble [0 × 3]> <tibble>    
+3 <split [176/44]> Fold3 <tibble [576 × 9]> <tibble [0 × 3]> <tibble>    
+4 <split [176/44]> Fold4 <tibble [576 × 9]> <tibble [0 × 3]> <tibble>    
+5 <split [176/44]> Fold5 <tibble [576 × 9]> <tibble [0 × 3]> <tibble>    
+Model has been saved as: model_output/data_isqrt_soil_Warm.Humid/tuning/models/rf_best_model.rds 
+# A tibble: 576 × 11
+    mtry trees min_n max.depth sample.fraction .metric .estimator    mean     n
+   <int> <int> <int>     <int>           <dbl> <chr>   <chr>        <dbl> <int>
+ 1     3   500    20         3             0.5 mae     standard   668.        5
+ 2     3   500    20         3             0.5 rmse    standard   848.        5
+ 3     3   500    20         3             0.5 rsq     standard     0.429     5
+ 4     5   500    20         3             0.5 mae     standard   655.        5
+ 5     5   500    20         3             0.5 rmse    standard   833.        5
+ 6     5   500    20         3             0.5 rsq     standard     0.441     5
+ 7     7   500    20         3             0.5 mae     standard   647.        5
+ 8     7   500    20         3             0.5 rmse    standard   828.        5
+ 9     7   500    20         3             0.5 rsq     standard     0.443     5
+10     9   500    20         3             0.5 mae     standard   645.        5
+# ℹ 566 more rows
+# ℹ 2 more variables: std_err <dbl>, .config <chr>
+Preparation of a new explainer is initiated
+  -> model label       :  model 
+  -> data              :  220  rows  12  cols 
+  -> data              :  tibble converted into a data.frame 
+  -> target variable   :  220  values 
+  -> predict function  :  yhat.workflow  will be used ( [33m default [39m )
+  -> predicted values  :  No value for predict function target column. ( [33m default [39m )
+  -> model_info        :  package tidymodels , ver. 1.2.0 , task regression ( [33m default [39m ) 
+  -> predicted values  :  numerical, min =  389.1495 , mean =  2205.157 , max =  3891.269  
+  -> residual function :  difference between y and yhat ( [33m default [39m )
+  -> residuals         :  numerical, min =  -1720.656 , mean =  -17.77023 , max =  2891.665  
+ [32m A new explainer has been created! [39m 
+Orientation inferred to be along y-axis; override with
+`position_quasirandom(orientation = 'x')`
+[1] "SHAP variable importance: Done"
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "All colour feature SHAP plots for Rain.Days.L.1: Done"
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "All colour feature SHAP plots for Rain.sum: Done"
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "All colour feature SHAP plots for Rain.sum.Dev.Mean: Done"
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "All colour feature SHAP plots for Tmax.mean: Done"
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "All colour feature SHAP plots for Rain.Days.L.1.Dev.Mean: Done"
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "All colour feature SHAP plots for Rain.Max.RSeq.5: Done"
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "All colour feature SHAP plots for Tmax.mean.Dev.Mean: Done"
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "All colour feature SHAP plots for Mean_c_tot: Done"
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "All colour feature SHAP plots for Mean_ecec.f: Done"
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "All colour feature SHAP plots for Mean_oc: Done"
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "All colour feature SHAP plots for Mean_sand_tot_psa: Done"
+[1] "All colour non-feature SHAP plots for Rain.Days.L.1: Done"
+[1] "All colour non-feature SHAP plots for Rain.sum: Done"
+[1] "All colour non-feature SHAP plots for Rain.sum.Dev.Mean: Done"
+[1] "All colour non-feature SHAP plots for Tmax.mean: Done"
+[1] "All colour non-feature SHAP plots for Rain.Days.L.1.Dev.Mean: Done"
+[1] "All colour non-feature SHAP plots for Rain.Max.RSeq.5: Done"
+[1] "All colour non-feature SHAP plots for Tmax.mean.Dev.Mean: Done"
+[1] "All colour non-feature SHAP plots for Mean_c_tot: Done"
+[1] "All colour non-feature SHAP plots for Mean_ecec.f: Done"
+[1] "All colour non-feature SHAP plots for Mean_oc: Done"
+[1] "All colour non-feature SHAP plots for Mean_sand_tot_psa: Done"
+Error in UseMethod("grid.draw") : 
+  no applicable method for 'grid.draw' applied to an object of class "rpart"
+Calls: ggsave -> grid.draw
+In addition: Warning message:
+Using an external vector in selections was deprecated in tidyselect 1.1.0.
+ℹ Please use `all_of()` or `any_of()` instead.
+  # Was:
+  data %>% select(predictor_list)
+
+  # Now:
+  data %>% select(all_of(predictor_list))
+
+See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>. 
+Execution halted

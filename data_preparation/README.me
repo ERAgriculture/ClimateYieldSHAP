@@ -1,0 +1,71 @@
+# Data Preparation Scripts
+
+This directory contains data preparation scripts for the ERA (Evidence for Resilient Agriculture) dataset. These scripts process agricultural data, combining crop yield information with climate and soil data to prepare datasets for machine learning analysis.
+
+## Overview
+
+The data preparation process involves several key steps:
+- Loading and filtering ERA crop yield data
+- Processing climate data from CHIRPS and POWER datasets
+- Incorporating soil property data from ERA and SoilGrids
+- Merging datasets and converting them to standardized formats
+- Performing quality control and validation of the merged data
+
+## Scripts
+
+### 1. `data_preparation.R`
+
+This script:
+
+- Process climate data and calculating climate indicators
+- Estimates missing planting dates based on rainfall patterns
+- Merges climate and soil data with yield observations
+- Converts data from wide to long format
+- Standardizes units for yield measurements
+- Removes some outliers and invalid observations
+
+The script produces four main dataset variations:
+- `data_ERA_Clim_Soil`: Using only observations with reported planting and harvest dates
+- `EcoCrop_ERA_Clim_Soil`: Using estimated dates based on EcoCrop model
+- `Plant1_30_ERA_Clim_Soil`: Computing climate factors for first 30 days after planting
+- `PreSowing_ERA_Clim_Soil`: Computing climate factors for 30 days before planting
+
+### 2. `soilgrids_era_comparison.R`
+
+This script compares soil properties between two data sources:
+
+- Correlation analysis between SoilGrids and ERA soil properties
+- Scatter plots for comparing key soil measurements (organic carbon, pH, clay, sand, silt)
+- Visualization of soil property relationships via correlation matrices
+
+## Custom Functions
+
+The scripts rely on several custom R functions located in the `R/` folder:
+
+- `ERAWide2Long_mod.R`: A modified version of the ERAWide2Long version from the ERAgON package that corrects a processing error
+- `ERA_convert_units.R`: Standardizes yield and other measurements to consistent units
+- `map_to_usda_texture.R`: Maps soil texture descriptions to USDA texture classes
+- `local_CalcClimate.R`: A modified version of the CalcClimate.R from the ERAgON package so it allows for presowing dates
+
+## Outputs
+
+The processed datasets and analysis outputs are saved in the `outputs/era/` directory:
+
+- CSV and RDS files for each of the four main dataset variations
+- Comparison plots for soil properties
+- Correlation matrices for soil variables
+- Diagnostic plots for data quality assessment
+
+## Dependencies
+
+The scripts require the following R packages:
+- tidyverse, dplyr, ggplot2 for data manipulation and visualization
+- data.table for efficient data handling
+- ERAg and ERAgON for ERA-specific data processing
+- corrplot for correlation matrix visualization
+- arrow for reading parquet files
+
+Additionally, the project requires access to:
+- ERA.Compiled dataset
+- POWER.CHIRPS climate data
+- SoilGrids and ERA soil property data

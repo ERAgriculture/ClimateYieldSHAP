@@ -1,0 +1,523 @@
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ forcats   1.0.0     ✔ readr     2.1.5
+✔ ggplot2   3.5.0     ✔ tibble    3.2.1
+✔ lubridate 1.9.3     ✔ tidyr     1.3.1
+✔ purrr     1.0.2     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+── Attaching packages ────────────────────────────────────── tidymodels 1.2.0 ──
+✔ broom        1.0.5      ✔ rsample      1.2.1 
+✔ dials        1.3.0      ✔ tune         1.2.1 
+✔ infer        1.0.7      ✔ workflows    1.1.4 
+✔ modeldata    1.3.0      ✔ workflowsets 1.1.0 
+✔ parsnip      1.2.1      ✔ yardstick    1.3.1 
+✔ recipes      1.0.10     
+── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
+✖ scales::discard() masks purrr::discard()
+✖ dplyr::filter()   masks stats::filter()
+✖ recipes::fixed()  masks stringr::fixed()
+✖ dplyr::lag()      masks stats::lag()
+✖ yardstick::spec() masks readr::spec()
+✖ recipes::step()   masks stats::step()
+• Use tidymodels_prefer() to resolve common conflicts.
+
+Attaching package: ‘vip’
+
+The following object is masked from ‘package:utils’:
+
+    vi
+
+
+Attaching package: ‘pdp’
+
+The following object is masked from ‘package:purrr’:
+
+    partial
+
+Loading required package: DALEX
+Welcome to DALEX (version: 2.4.3).
+Find examples and detailed introduction at: http://ema.drwhy.ai/
+
+
+Attaching package: ‘DALEX’
+
+The following object is masked from ‘package:vip’:
+
+    titanic
+
+The following objects are masked from ‘package:treeshap’:
+
+    colors_breakdown_drwhy, colors_discrete_drwhy, theme_drwhy,
+    theme_drwhy_vertical
+
+The following object is masked from ‘package:dplyr’:
+
+    explain
+
+
+Attaching package: ‘rpart’
+
+The following object is masked from ‘package:dials’:
+
+    prune
+
+
+Attaching package: ‘rlang’
+
+The following objects are masked from ‘package:purrr’:
+
+    %@%, flatten, flatten_chr, flatten_dbl, flatten_int, flatten_lgl,
+    flatten_raw, invoke, splice
+
+Linking to GEOS 3.12.1, GDAL 3.8.3, PROJ 9.3.1; sf_use_s2() is TRUE
+
+Attaching package: ‘rnaturalearthdata’
+
+The following object is masked from ‘package:rnaturalearth’:
+
+    countries110
+
+Linking to librsvg 2.52.5
+Loading required package: carData
+
+Attaching package: ‘car’
+
+The following object is masked from ‘package:purrr’:
+
+    some
+
+The following object is masked from ‘package:dplyr’:
+
+    recode
+
+Loading required package: lattice
+
+Attaching package: ‘caret’
+
+The following objects are masked from ‘package:yardstick’:
+
+    precision, recall, sensitivity, specificity
+
+The following object is masked from ‘package:purrr’:
+
+    lift
+
+corrplot 0.92 loaded
+
+Attaching package: ‘fastshap’
+
+The following objects are masked from ‘package:DALEX’:
+
+    explain, titanic
+
+The following object is masked from ‘package:vip’:
+
+    gen_friedman
+
+The following object is masked from ‘package:dplyr’:
+
+    explain
+
+
+Attaching package: ‘janitor’
+
+The following objects are masked from ‘package:stats’:
+
+    chisq.test, fisher.test
+
+
+Attaching package: ‘plotly’
+
+The following object is masked from ‘package:ggplot2’:
+
+    last_plot
+
+The following object is masked from ‘package:stats’:
+
+    filter
+
+The following object is masked from ‘package:graphics’:
+
+    layout
+
+
+Attaching package: ‘xgboost’
+
+The following object is masked from ‘package:plotly’:
+
+    slice
+
+The following object is masked from ‘package:dplyr’:
+
+    slice
+
+Warning message:
+In normalizePath("/Users/alvaro/My Drive (acarmonacabrero@gmail.com)/Atlas Alvaro/workflow") :
+  path[1]="/Users/alvaro/My Drive (acarmonacabrero@gmail.com)/Atlas Alvaro/workflow": No such file or directory
+
+Data Preprocessing Summary:
+----------------------------
+
+1. Columns with missing values after imputation:
+   - T.NO: 83 missing values
+   - T.NI: 157 missing values
+   - Elevation: 2093 missing values
+   - MAT: 3205 missing values
+   - MAP: 2236 missing values
+   - TAP: 3918 missing values
+   - MSP: 4156 missing values
+   - TSP: 3878 missing values
+   - SOC: 2890 missing values
+   - SOC.Depth: 2878 missing values
+   - Soil.pH: 1773 missing values
+   - Harvest.Start: 1376 missing values
+   - Harvest.End: 1376 missing values
+   - Plot.Size: 504 missing values
+   - Season.Start: 2833 missing values
+   - Season.End: 2833 missing values
+   - Upper: 4893 missing values
+   - Lower: 4893 missing values
+   - MeanT.Error: 2521 missing values
+   - MeanC.Error: 2517 missing values
+   - Lat: 4780 missing values
+   - Lon: 4795 missing values
+   - Season: 2833 missing values
+   - Data.PS.Date: 4615 missing values
+   - Data.PE.Date: 4615 missing values
+   - SLen: 1376 missing values
+   - Data.SLen: 3533 missing values
+   - Rain.Start.End: 2274 missing values
+   - UnC.CHIRPS.P.Date: 2313 missing values
+   - M.Year.Code: 2833 missing values
+   - H.Diff: 1376 missing values
+
+2. Near-zero variance predictors detected (numeric only):
+   - T.NO
+   - Outcode
+   - Upper
+   - Lower
+   - Topt.low
+   - Topt.high
+   - Tlow
+   - Thigh
+   - cycle_min
+   - cycle_max
+   - SLen.EcoCrop
+   - GDDmax
+   - ETo.NA
+   - W.Start
+   - GDDmax.Dev.Mean
+   - GDDmax.Dev.Median
+   - Median_bdr
+   - Mode_bdr
+   Consider removing these predictors.
+# Resampling results
+# 5-fold cross-validation using stratification 
+# A tibble: 5 × 5
+  splits             id    .metrics         .notes           .predictions      
+  <list>             <chr> <list>           <list>           <list>            
+1 <split [1921/483]> Fold1 <tibble [3 × 4]> <tibble [0 × 3]> <tibble [483 × 4]>
+2 <split [1922/482]> Fold2 <tibble [3 × 4]> <tibble [0 × 3]> <tibble [482 × 4]>
+3 <split [1924/480]> Fold3 <tibble [3 × 4]> <tibble [0 × 3]> <tibble [480 × 4]>
+4 <split [1924/480]> Fold4 <tibble [3 × 4]> <tibble [0 × 3]> <tibble [480 × 4]>
+5 <split [1925/479]> Fold5 <tibble [3 × 4]> <tibble [0 × 3]> <tibble [479 × 4]>
+Model has been saved as: model_output/data_isqrt_nosoil_Warm.Subhumid/tuning/models/linear_reg_best_model.rds 
+# A tibble: 3 × 6
+  .metric .estimator      mean     n  std_err .config             
+  <chr>   <chr>          <dbl> <int>    <dbl> <chr>               
+1 mae     standard   1208.         5  5.82    Preprocessor1_Model1
+2 rmse    standard   1536.         5 10.7     Preprocessor1_Model1
+3 rsq     standard      0.0716     5  0.00682 Preprocessor1_Model1
+→ A | warning: 9 columns were requested but there were 7 predictors in the data. 7 will be used.
+There were issues with some computations   A: x1
+There were issues with some computations   A: x2
+There were issues with some computations   A: x3
+There were issues with some computations   A: x5
+There were issues with some computations   A: x6
+There were issues with some computations   A: x7
+There were issues with some computations   A: x9
+There were issues with some computations   A: x10
+There were issues with some computations   A: x11
+There were issues with some computations   A: x12
+There were issues with some computations   A: x13
+There were issues with some computations   A: x14
+There were issues with some computations   A: x15
+There were issues with some computations   A: x16
+There were issues with some computations   A: x17
+There were issues with some computations   A: x19
+There were issues with some computations   A: x20
+There were issues with some computations   A: x22
+There were issues with some computations   A: x23
+There were issues with some computations   A: x24
+There were issues with some computations   A: x25
+There were issues with some computations   A: x26
+There were issues with some computations   A: x27
+There were issues with some computations   A: x28
+There were issues with some computations   A: x29
+There were issues with some computations   A: x30
+There were issues with some computations   A: x31
+There were issues with some computations   A: x32
+There were issues with some computations   A: x34
+There were issues with some computations   A: x36
+There were issues with some computations   A: x37
+There were issues with some computations   A: x38
+There were issues with some computations   A: x39
+There were issues with some computations   A: x40
+There were issues with some computations   A: x41
+There were issues with some computations   A: x42
+There were issues with some computations   A: x43
+There were issues with some computations   A: x44
+There were issues with some computations   A: x45
+There were issues with some computations   A: x46
+There were issues with some computations   A: x47
+There were issues with some computations   A: x48
+There were issues with some computations   A: x49
+There were issues with some computations   A: x51
+There were issues with some computations   A: x53
+There were issues with some computations   A: x54
+There were issues with some computations   A: x55
+There were issues with some computations   A: x57
+There were issues with some computations   A: x58
+There were issues with some computations   A: x59
+There were issues with some computations   A: x60
+There were issues with some computations   A: x61
+There were issues with some computations   A: x62
+There were issues with some computations   A: x63
+There were issues with some computations   A: x64
+There were issues with some computations   A: x65
+There were issues with some computations   A: x66
+There were issues with some computations   A: x68
+There were issues with some computations   A: x69
+There were issues with some computations   A: x71
+There were issues with some computations   A: x72
+There were issues with some computations   A: x73
+There were issues with some computations   A: x74
+There were issues with some computations   A: x75
+There were issues with some computations   A: x76
+There were issues with some computations   A: x77
+There were issues with some computations   A: x78
+There were issues with some computations   A: x79
+There were issues with some computations   A: x80
+There were issues with some computations   A: x81
+There were issues with some computations   A: x83
+There were issues with some computations   A: x85
+There were issues with some computations   A: x86
+There were issues with some computations   A: x87
+There were issues with some computations   A: x88
+There were issues with some computations   A: x89
+There were issues with some computations   A: x90
+There were issues with some computations   A: x91
+There were issues with some computations   A: x92
+There were issues with some computations   A: x93
+There were issues with some computations   A: x94
+There were issues with some computations   A: x95
+There were issues with some computations   A: x96
+There were issues with some computations   A: x98
+There were issues with some computations   A: x99
+There were issues with some computations   A: x101
+There were issues with some computations   A: x102
+There were issues with some computations   A: x104
+There were issues with some computations   A: x105
+There were issues with some computations   A: x106
+There were issues with some computations   A: x107
+There were issues with some computations   A: x108
+There were issues with some computations   A: x109
+There were issues with some computations   A: x110
+There were issues with some computations   A: x111
+There were issues with some computations   A: x112
+There were issues with some computations   A: x113
+There were issues with some computations   A: x115
+There were issues with some computations   A: x117
+There were issues with some computations   A: x118
+There were issues with some computations   A: x119
+There were issues with some computations   A: x120
+There were issues with some computations   A: x121
+There were issues with some computations   A: x122
+There were issues with some computations   A: x123
+There were issues with some computations   A: x124
+There were issues with some computations   A: x125
+There were issues with some computations   A: x126
+There were issues with some computations   A: x127
+There were issues with some computations   A: x128
+There were issues with some computations   A: x129
+There were issues with some computations   A: x131
+There were issues with some computations   A: x132
+There were issues with some computations   A: x134
+There were issues with some computations   A: x135
+There were issues with some computations   A: x136
+There were issues with some computations   A: x137
+There were issues with some computations   A: x138
+There were issues with some computations   A: x139
+There were issues with some computations   A: x140
+There were issues with some computations   A: x141
+There were issues with some computations   A: x142
+There were issues with some computations   A: x143
+There were issues with some computations   A: x144
+There were issues with some computations   A: x145
+There were issues with some computations   A: x147
+There were issues with some computations   A: x149
+There were issues with some computations   A: x150
+There were issues with some computations   A: x151
+There were issues with some computations   A: x153
+There were issues with some computations   A: x154
+There were issues with some computations   A: x155
+There were issues with some computations   A: x156
+There were issues with some computations   A: x157
+There were issues with some computations   A: x158
+There were issues with some computations   A: x159
+There were issues with some computations   A: x160
+There were issues with some computations   A: x161
+There were issues with some computations   A: x163
+There were issues with some computations   A: x164
+There were issues with some computations   A: x166
+There were issues with some computations   A: x167
+There were issues with some computations   A: x168
+There were issues with some computations   A: x169
+There were issues with some computations   A: x170
+There were issues with some computations   A: x171
+There were issues with some computations   A: x172
+There were issues with some computations   A: x173
+There were issues with some computations   A: x174
+There were issues with some computations   A: x175
+There were issues with some computations   A: x176
+There were issues with some computations   A: x177
+There were issues with some computations   A: x179
+There were issues with some computations   A: x180
+There were issues with some computations   A: x182
+There were issues with some computations   A: x183
+There were issues with some computations   A: x184
+There were issues with some computations   A: x185
+There were issues with some computations   A: x186
+There were issues with some computations   A: x187
+There were issues with some computations   A: x188
+There were issues with some computations   A: x189
+There were issues with some computations   A: x190
+There were issues with some computations   A: x191
+There were issues with some computations   A: x192
+There were issues with some computations   A: x194
+There were issues with some computations   A: x196
+There were issues with some computations   A: x197
+There were issues with some computations   A: x199
+There were issues with some computations   A: x200
+There were issues with some computations   A: x201
+There were issues with some computations   A: x202
+There were issues with some computations   A: x203
+There were issues with some computations   A: x204
+There were issues with some computations   A: x205
+There were issues with some computations   A: x206
+There were issues with some computations   A: x207
+There were issues with some computations   A: x208
+There were issues with some computations   A: x209
+There were issues with some computations   A: x210
+There were issues with some computations   A: x212
+There were issues with some computations   A: x214
+There were issues with some computations   A: x215
+There were issues with some computations   A: x216
+There were issues with some computations   A: x217
+There were issues with some computations   A: x218
+There were issues with some computations   A: x219
+There were issues with some computations   A: x220
+There were issues with some computations   A: x221
+There were issues with some computations   A: x222
+There were issues with some computations   A: x223
+There were issues with some computations   A: x224
+There were issues with some computations   A: x225
+There were issues with some computations   A: x227
+There were issues with some computations   A: x229
+There were issues with some computations   A: x230
+There were issues with some computations   A: x231
+There were issues with some computations   A: x232
+There were issues with some computations   A: x233
+There were issues with some computations   A: x234
+There were issues with some computations   A: x235
+There were issues with some computations   A: x236
+There were issues with some computations   A: x237
+There were issues with some computations   A: x238
+There were issues with some computations   A: x239
+There were issues with some computations   A: x240
+There were issues with some computations   A: x240
+
+# Tuning results
+# 5-fold cross-validation using stratification 
+# A tibble: 5 × 5
+  splits             id    .metrics           .notes            .predictions
+  <list>             <chr> <list>             <list>            <list>      
+1 <split [1921/483]> Fold1 <tibble [576 × 9]> <tibble [48 × 3]> <tibble>    
+2 <split [1922/482]> Fold2 <tibble [576 × 9]> <tibble [48 × 3]> <tibble>    
+3 <split [1924/480]> Fold3 <tibble [576 × 9]> <tibble [48 × 3]> <tibble>    
+4 <split [1924/480]> Fold4 <tibble [576 × 9]> <tibble [48 × 3]> <tibble>    
+5 <split [1925/479]> Fold5 <tibble [576 × 9]> <tibble [48 × 3]> <tibble>    
+
+There were issues with some computations:
+
+  - Warning(s) x240: 9 columns were requested but there were 7 predictors in the data....
+
+Run `show_notes(.Last.tune.result)` for more information.
+Model has been saved as: model_output/data_isqrt_nosoil_Warm.Subhumid/tuning/models/rf_best_model.rds 
+# A tibble: 576 × 11
+    mtry trees min_n max.depth sample.fraction .metric .estimator     mean     n
+   <int> <int> <int>     <int>           <dbl> <chr>   <chr>         <dbl> <int>
+ 1     3   500    20         3             0.5 mae     standard   1046.        5
+ 2     3   500    20         3             0.5 rmse    standard   1353.        5
+ 3     3   500    20         3             0.5 rsq     standard      0.340     5
+ 4     5   500    20         3             0.5 mae     standard   1040.        5
+ 5     5   500    20         3             0.5 rmse    standard   1349.        5
+ 6     5   500    20         3             0.5 rsq     standard      0.330     5
+ 7     7   500    20         3             0.5 mae     standard   1043.        5
+ 8     7   500    20         3             0.5 rmse    standard   1351.        5
+ 9     7   500    20         3             0.5 rsq     standard      0.317     5
+10     9   500    20         3             0.5 mae     standard   1043.        5
+# ℹ 566 more rows
+# ℹ 2 more variables: std_err <dbl>, .config <chr>
+Preparation of a new explainer is initiated
+  -> model label       :  model 
+  -> data              :  2404  rows  8  cols 
+  -> data              :  tibble converted into a data.frame 
+  -> target variable   :  2404  values 
+  -> predict function  :  yhat.workflow  will be used ( [33m default [39m )
+  -> predicted values  :  No value for predict function target column. ( [33m default [39m )
+  -> model_info        :  package tidymodels , ver. 1.2.0 , task regression ( [33m default [39m ) 
+  -> predicted values  :  numerical, min =  350.3178 , mean =  2739.789 , max =  6407.674  
+  -> residual function :  difference between y and yhat ( [33m default [39m )
+  -> residuals         :  numerical, min =  -4112.699 , mean =  7.92546 , max =  4696.59  
+ [32m A new explainer has been created! [39m 
+Orientation inferred to be along y-axis; override with
+`position_quasirandom(orientation = 'x')`
+[1] "SHAP variable importance: Done"
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "All colour feature SHAP plots for Rain.Days.L.1: Done"
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "All colour feature SHAP plots for Rain.sum: Done"
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "All colour feature SHAP plots for Rain.sum.Dev.Mean: Done"
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."
+[1] "Not all beeswarm plots are available. Unable to create combined plot."

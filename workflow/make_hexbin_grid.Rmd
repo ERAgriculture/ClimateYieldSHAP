@@ -1,0 +1,292 @@
+---
+title: "Understanding the ERA Hexbin SHAP Visualization Script"
+author: "ERA Visualization Guide"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, echo = TRUE)
+```
+
+# Introduction
+
+This document explains the R script used to create hexbin visualizations of SHAP (SHapley Additive exPlanations) values for the ERA (Evidence for Resilient Agriculture) project. The script generates sophisticated visualizations that show feature interactions and importance across different Agro-Ecological Zones (AEZs) in Africa.
+
+# Script Overview
+
+The script creates a grid of hexbin plots showing relationships between SHAP values for key features across different agro-ecological zones, with each row representing a different climate zone (Semiarid, Subhumid, Humid). These visualizations help understand how different climate variables interact to influence crop yields and how these interactions vary across regions.
+
+# Libraries and Dependencies
+
+```{r libraries}
+library(ggplot2)      # Core plotting functionality
+library(hexbin)       # For creating hexagonal binning plots
+library(patchwork)    # For combining multiple plots
+library(dplyr)        # For data manipulation
+library(stringr)      # For string manipulation
+library(ggrepel)      # For non-overlapping text labels
+library(shadowtext)   # For text with background/shadow effects
+source('R/hexbin_grid.R')  # Custom functions for hexbin grid creation
+```
+
+The script relies on several R packages, with the core visualization being handled by `ggplot2` and `hexbin`. It also sources a custom R function file `hexbin_grid.R` that contains specialized functions for creating the hexbin grid layouts.
+
+# Configuration Settings
+
+```{r configuration}
+# Select AEZ Temperature
+AEZ_temp <- "Warm"
+# AEZ_temp <- "Cool"
+
+# Create an empty list to store SHAP datasets
+shap_list <- list()
+
+experiment <- "no_outliers_eco_isqrt_nosoil"
+```
+
+The script allows selection between "Warm" and "Cool" AEZ temperature regimes, which determines which set of agro-ecological zones will be visualized. It also specifies the experiment name, which is used to locate the appropriate data files.
+
+# Data Loading and Feature Selection
+
+## Warm AEZs Configuration
+
+```{r warm_config}
+if (AEZ_temp == "Warm"){
+  max_importance <- 500
+  features_list <- list(
+    c("Avg_Max_Temp", "Total_Rainfall_Dev", "Total_Rainfall", "Avg_Max_Temp_Dev"),
+    c("Avg_Max_Temp", "Avg_Max_Temp_Dev", "Longest_Dry_Spell", "Total_Rainfall"),
+    c("Total_Rainfall", "Avg_Max_Temp_Dev", "Total_Rainfall_Dev", "Fraction_Rainy_Days"))
+  
+  custom_log_breaks <- c(1, 4, 16, 64, 256)
+  
+  AEZ_names <- c("Warm Semiarid", "Warm Subhumid", "Warm Humid")
+  # Read data for Warm Semiarid
+  results <- readRDS(paste0("outputs/", experiment, "_Warm.Semiarid/full_results/full_results.rds"))
+  cv_results <- readRDS(paste0("outputs/", experiment, "_Warm.Semiarid/full_results/cv_results.rds"))
+  shap_list[[1]] <- results$shap_values
+  cv_importance_list[[1]] <- cv_results$shap_plot
+  
+  # Read data for Warm Subhumid
+  results <- readRDS(paste0("outputs/", experiment, "_Warm.Subhumid/full_results/full_results.rds"))
+  cv_results <- readRDS(paste0("outputs/", experiment, "_Warm.Subhumid/full_results/cv_results.rds"))
+  shap_list[[2]] <- results$shap_values
+  cv_importance_list[[2]] <- cv_results$shap_plot
+  
+  # Read data for Warm Humid
+  results <- readRDS(paste0("outputs/", experiment, "_Warm.Humid/full_results/full_results.rds"))
+  cv_results <- readRDS(paste0("outputs/", experiment, "_Warm.Humid/full_results/cv_results.rds"))
+  shap_list[[3]] <- results$shap_values
+  cv_importance_list[[3]] <- cv_results$shap_plot
+}
+```
+
+## Cool AEZs Configuration
+
+```{r cool_config}
+else if(AEZ_temp == "Cool"){
+  max_importance <- 750
+  
+  features_list <- list(
+    c("Total_Rainfall", "Avg_Max_Temp_Dev", "Total_Rainfall_Dev", "Avg_Max_Temp"),
+    c("Avg_Max_Temp", "Total_Rainfall", "Fraction_Rainy_Days", "Total_Rainfall_Dev"),
+    c("Avg_Max_Temp_Dev", "Fraction_Rainy_Days_Dev", "Total_Rainfall", "Avg_Max_Temp"))
+  
+  custom_log_breaks <- c(1, 4, 16, 64, 150)
+  
+  AEZ_names <- c("Cool Semiarid", "Cool Subhumid", "Cool Humid")
+  # Read data for Cool Semiarid
+  results <- readRDS(paste0("outputs/", experiment, "_Cool.Semiarid/full_results/full_results.rds"))
+  cv_results <- readRDS(paste0("outputs/", experiment, "_Cool.Semiarid/full_results/cv_results.rds"))
+  shap_list[[1]] <- results$shap_values
+  cv_importance_list[[1]] <- cv_results$shap_plot
+  
+  # Read data for Cool Subhumid
+  results <- readRDS(paste0("outputs/", experiment, "_Cool.Subhumid/full_results/full_results.rds"))
+  cv_results <- readRDS(paste0("outputs/", experiment, "_Cool.Subhumid/full_results/cv_results.rds"))
+  shap_list[[2]] <- results$shap_values
+  cv_importance_list[[2]] <- cv_results$shap_plot
+  
+  # Read data for Cool Humid
+  results <- readRDS(paste0("outputs/", experiment, "_Cool.Humid/full_results/full_results.rds"))
+  cv_results <- readRDS(paste0("outputs/", experiment, "_Cool.Humid/full_results/cv_results.rds"))
+  shap_list[[3]] <- results$shap_values
+  cv_importance_list[[3]] <- cv_results$shap_plot
+}
+```
+
+Based on the selected AEZ temperature regime (Warm or Cool), the script:
+
+1. Sets the maximum importance value for consistent scaling across visualizations
+2. Defines the list of features to be visualized for each AEZ
+3. Sets custom logarithmic break points for the visualizations
+4. Loads both the SHAP values and cross-validation results for each of the three AEZs (Semiarid, Subhumid, Humid)
+
+For each temperature regime, the script loads data from previously computed Random Forest models:
+- `full_results.rds`: Contains SHAP values from the full model trained on all training data
+- `cv_results.rds`: Contains cross-validation results and feature importance plots
+
+Note that different feature sets are prioritized for visualization in Warm versus Cool AEZs, reflecting the distinct climate dynamics that drive agricultural outcomes in these different regions.
+
+# Performance Metrics Loading
+
+```{r performance_metrics}
+performance_metrics <- read.csv(paste0("final_results/", experiment, "_performance_metrics.csv"))
+performance_metrics$AEZ <- gsub("\\.", " ", performance_metrics$AEZ)
+```
+
+The script loads the performance metrics summary table that contains model evaluation statistics for each AEZ, then reformats the AEZ names by replacing dots with spaces to ensure consistent formatting.
+
+# Plot Modification
+
+```{r plot_modification}
+# Only show title for the first plot, and show stats for all plots
+for (i in seq_along(cv_importance_list)) {
+  aez_performance <- performance_metrics %>% 
+    filter(AEZ == AEZ_names[i])
+  cv_importance_list[[i]] <- modify_importance_plot_with_data(
+    cv_importance_list[[i]],
+    AEZ_name = AEZ_names[i],
+    R2 = aez_performance$Full_Test_R2,
+    n_obs = aez_performance$N_obs,
+    max_importance = max_importance,
+    show_title = (i == 1),  # Only show title for the first plot
+    show_stats = TRUE
+  )
+}
+```
+
+This code enriches each feature importance plot with performance statistics:
+
+1. Filters performance metrics for the current AEZ
+2. Modifies each importance plot to include:
+   - The AEZ name
+   - R² (coefficient of determination) from test data
+   - Number of observations used in the analysis
+   - Consistent maximum importance value for proper scaling
+   - Title shown only for the first plot to avoid redundancy
+   - Performance statistics shown for all plots
+
+The `modify_importance_plot_with_data()` function (defined in the external `hexbin_grid.R` file) handles these modifications to create consistent and informative visualizations.
+
+# Creating and Saving the Visualization Grid
+
+```{r create_grid}
+# Create the plot grid with modified CV importance plots and custom log breaks
+plot_grid <- create_shap_hexbin_grid_with_cv(
+  data_list = shap_list,
+  features_list = features_list,
+  cv_importance_list = cv_importance_list,
+  row_names = NULL,
+  title = "",
+  show_correlation = FALSE,
+  add_trend_line = FALSE,
+  n_x_breaks = 4,
+  k = 3,
+  custom_log_breaks = custom_log_breaks
+)
+
+# Display the plot
+print(plot_grid)
+
+# Save the figure
+ggsave(
+  paste0("final_results/", AEZ_temp , "_hexbinc.pdf"),
+  plot = plot_grid,
+  width = 180,              # Width in mm
+  height = 160,             # Height in mm
+  units = "mm",
+  dpi = 300
+)
+ggsave(
+  paste0("final_results/", AEZ_temp , "_hexbinc.png"),
+  plot = plot_grid,
+  width = 180,              # Width in mm
+  height = 160,             # Height in mm
+  units = "mm",
+  dpi = 300
+)
+```
+
+Finally, the script:
+
+1. Creates a grid of hexbin plots showing SHAP value relationships, with custom configurations:
+   - Uses the loaded SHAP values from each AEZ
+   - Applies the feature lists defined for each AEZ
+   - Incorporates the modified CV importance plots
+   - Uses custom logarithmic breaks for the color scale
+   - Sets parameters for plot appearance (no correlation coefficients, no trend lines)
+
+2. Displays the plot grid in the R environment
+
+3. Saves the visualization in both PDF and PNG formats:
+   - Files are saved with names that include the temperature regime (Warm or Cool)
+   - Dimensions are specified in millimeters for consistent sizing
+   - High resolution (300 DPI) is used for quality output
+
+# Understanding the Hexbin Visualization
+
+The final visualization is a complex grid of plots that visualizes:
+
+## Feature Importance Plots (Left Column)
+- Bar charts showing the relative importance of features in predicting crop yields
+- Features ordered by importance, with the most important at the top
+- Performance statistics (R², number of observations) for each AEZ
+
+## SHAP Interaction Hexbin Plots (Right Columns)
+- Hexagonal binning plots that show the density of data points
+- X-axis: Feature values
+- Y-axis: SHAP values (impact on model prediction)
+- Color: Density of observations (logarithmic scale)
+- Each row corresponds to a different AEZ (Semiarid, Subhumid, Humid)
+- Each column pair examines a different feature relationship
+
+## Interpreting the Plots
+
+The hexbin plots reveal:
+
+1. **Feature Effects**: How each feature's value relates to its impact on yield predictions (positive or negative)
+
+2. **Feature Distributions**: Where most observations fall within the feature space (indicated by hexagon color intensity)
+
+3. **Regional Differences**: How feature effects and distributions vary across different AEZs
+
+4. **Feature Interactions**: By comparing the same feature across different AEZs or different features within an AEZ
+
+## Example Insights
+
+From these visualizations, researchers can identify patterns such as:
+
+- Temperature thresholds beyond which crop yields decline rapidly
+- Rainfall levels that are optimal for different climate zones
+- How drought indicators (like dry spell length) impact yields differently across regions
+- Whether variability or absolute values of climate variables are more important in different contexts
+
+# Custom Functions
+
+While not shown in the main script, several custom functions in the `hexbin_grid.R` file are critical:
+
+## `modify_importance_plot_with_data()`
+Enhances feature importance plots with performance statistics and consistent formatting
+
+## `create_shap_hexbin_grid_with_cv()`
+Creates the grid layout combining feature importance plots with hexbin interaction plots
+
+These functions handle the complex task of arranging multiple plots into a coherent visualization that allows comparison across features and AEZs.
+
+# Conclusion
+
+This script creates sophisticated visualizations that help understand the complex relationships between climate variables and agricultural yields across different ecological zones in Africa. By combining feature importance with SHAP interaction plots in a dense but readable format, it enables researchers to:
+
+1. Identify the most important climate drivers of yield in each region
+2. Understand how these drivers interact
+3. Compare patterns across different agro-ecological zones
+4. Gain insights that can inform climate-smart agricultural practices
+
+The resulting visualizations serve both as analytical tools for researchers and communication tools for stakeholders and policymakers working on agricultural resilience in a changing climate.

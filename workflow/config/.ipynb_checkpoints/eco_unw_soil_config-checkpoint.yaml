@@ -1,0 +1,182 @@
+---
+# Configuration file for predictive modeling workflow
+  
+# Data configuration
+# Specify the path to your input data and the target variable
+data_path: "../data_preparation/outputs/era/EcoCrop_ERA_Clim_Soil.csv"
+out_path: "model_output"
+target: "yield"
+weighted: false
+weighted_method: ""
+general_formula: >
+  "yield ~ Rain.Days.L.1 + Rain.sum + Rain.sum.Dev.Mean + Tmax.mean + 
+  Rain.Days.L.1.Dev.Mean + Rain.Max.RSeq.5 +  Tmax.mean.Dev.Mean +
+  Mean_c_tot + Mean_ecec.f + Mean_oc + Mean_sand_tot_psa"
+# Preprocessing settings
+# Define how to handle missing values and outliers
+preprocessing:
+  imputation_method: "NULL" # Method for filling in missing values
+  lower_quantile: 0.00  # Remove data below this quantile (for outlier removal)
+  upper_quantile: 1.00  # Remove data above this quantile (for outlier removal)
+# Data splitting configuration
+# Specify how to split data for training and validation
+splits:
+  train_prop: 0.8  # Proportion of data to use for training
+  cv_folds: 5     # Number of cross-validation folds
+  seed: 123       # Random seed for reproducibility
+
+# Evaluation metrics
+# List the metrics to use for model evaluation
+metrics:
+  - "rmse"  # Root Mean Squared Error
+  - "rsq"   # R-squared
+  - "mae"   # Mean Absolute Error
+
+# Model configurations
+# Define the models to be trained and their hyperparameters
+models:
+   # Linear Regression
+  - name: "linear_reg"
+    type: "linear_reg"
+    mode: "regression"
+    engine: "lm"
+    tune_params: {}
+    formula: "yield ~ ."
+    recipe_options:
+      one_hot: true
+      standardize: false
+      normalize: false
+      augment: false
+      variable_selection: false
+      transformations: false
+      parallel: false
+
+#   # Ridge Regression
+#   - name: "ridge"
+#     type: "linear_reg"
+#     mode: "regression"
+#     engine: "glmnet"
+#     tune_params:
+#       penalty: [0.001, 0.01, 0.1, 1, 10]  # Regularization strength
+#       # mixture: [0]  # 0 for ridge regression
+#     formula: "yield ~ ."
+#     recipe_options:
+#       one_hot: true
+#       standardize: false
+#       normalize: false
+#       augment: false
+#       variable_selection: false
+#       transformations: false
+#       parallel: false
+# 
+# #   # Lasso Regression
+#   - name: "lasso"
+#     type: "linear_reg"
+#     mode: "regression"
+#     engine: "glmnet"
+#     tune_params:
+#       penalty: [0.001, 0.01, 0.1, 1, 10]  # Regularization strength
+#       # mixture: [1]  # 1 for lasso regression
+#     formula: "yield ~ ."
+#     recipe_options:
+#       one_hot: true
+#       standardize: false
+#       normalize: false
+#       augment: false
+#       variable_selection: false
+#       transformations: false
+#       parallel: false
+
+  # Generalized Additive Model (GAM)
+  # - name: "gam"
+  #   type: "gen_additive_mod"
+  #   mode: "regression"
+  #   engine: "mgcv"
+  #   tune_params:
+  #     # select: [TRUE, FALSE]  # Whether to do variable selection
+  #     adjust: [1, 2, 3]  # Smoothing parameter adjustment
+  #   formula: "yield ~ ."
+  #   recipe_options:
+  #     one_hot: true
+  #     standardize: true
+  #     normalize: false
+  #     augment: false
+  #     variable_selection: false
+  #     transformations: true
+  #     parallel: false
+
+  # Random Forest
+  - name: "rf"
+    type: "rand_forest"
+    mode: "regression"
+    engine: "ranger"
+    tune_params:
+      mtry: [3, 5]  # Number of variables to possibly split at in each node
+      min_n: [25, 40, 65, 100]  # Minimum number of data points in a node to be split further
+      trees: 300  # Number of trees in the forest
+      max.depth: [2, 3, 5, 7]  # Maximum tree depth
+      sample.fraction: [0.5, 0.6, 0.7, 0.8]
+    formula: "yield ~ ."
+    recipe_options:
+      one_hot: true
+      standardize: false
+      normalize: false
+      augment: false
+      variable_selection: false
+      transformations: false
+      parallel: false
+
+  # # XGBoost
+  # - name: "boost_tree"
+  #   type: "boost_tree"
+  #   mode: "regression"
+  #   engine: "xgboost"
+  #   tune_params:
+  #     trees: 750  # Number of trees (boosting rounds)
+  #     tree_depth: [3, 5, 7]  # Maximum tree depth
+  #     min_n: [10, 15, 20, 30]  # Minimum number of data points in a node to be split further
+  #     learn_rate: [0.01, 0.05, 0.1]  # Learning rate
+  #     sample_size: [0.7, 0.8, 0.9]  # Subsample ratio of the training instance
+  #     mtry: [0.5, 0.7, 0.9]  # Fraction of features to use in each tree
+  #     alpha: [0, 0.01, 0.1, 1]  # L1 regularization
+  #   fixed_params:
+  #     stop_iter: 10  # Early stopping rounds
+  #   formula: "yield ~ ."
+  #   recipe_options:
+  #     one_hot: true
+  #     standardize: false
+  #     normalize: false
+  #     augment: false
+  #     variable_selection: false
+  #     transformations: false
+  #     parallel: false
+
+# Explanations:
+# data_path: Path to the input data file
+# out_path: Directory where output files will be saved
+# target: Name of the target variable (dependent variable) in the dataset
+# general_formula: R formula specifying the model structure (e.g., "y ~ x1 + x2 + x3")
+
+# preprocessing:
+#   imputation_method: Method used to fill in missing values (e.g., "median", "mean")
+#   lower_quantile: Lower bound for removing outliers (e.g., 0.05 for 5th percentile)
+#   upper_quantile: Upper bound for removing outliers (e.g., 0.95 for 95th percentile)
+
+# shap:
+#   main_features: List of primary features for SHAP analysis
+#   interaction_features: List of features to consider for interactions in SHAP analysis
+
+# splits:
+#   train_prop: Proportion of data to use for training (e.g., 0.8 for 80%)
+#   cv_folds: Number of folds for cross-validation
+#   seed: Random seed for reproducibility
+
+# metrics: List of evaluation metrics to be used
+
+# models: List of model configurations to be tested
+#   Each model configuration should specify:
+#     name: Model type (e.g., "linear_reg", "random_forest")
+#     mode: "regression" or "classification"
+#     engine: Underlying package to use (e.g., "lm", "ranger")
+#     tune_params: Parameters to be tuned during model training
+#     recipe_options: Data preprocessing steps for the model

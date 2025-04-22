@@ -1,0 +1,686 @@
+---
+title: "Understanding the ERA Data Analysis with Bootstrap Resampling Script"
+author: "ERA Analysis Guide"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    theme: cosmo
+vignette: >
+  %\VignetteIndexEntry{ERA Data Analysis with Bootstrap Resampling}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, echo = TRUE)
+```
+
+# Introduction
+
+This vignette explains the ERA (Evidence for Resilient Agriculture) data analysis script provided. The script performs a comprehensive analysis of agricultural yield data across different Agro-Ecological Zones (AEZs) in Africa using bootstrap resampling to quantify uncertainty in predictions and feature importance.
+
+# Script Structure and Workflow
+
+The script follows a structured workflow to analyze agricultural data across multiple AEZs:
+
+## 1. Initialization
+
+```{r initialization}
+# Create logs directory
+dir.create("logs", recursive = TRUE, showWarnings = FALSE)
+
+# Load required libraries
+library(tidymodels)
+library(tidyverse)
+library(vip)
+library(yaml)
+library(plotly)
+```
+
+The script begins by creating a logs directory and loading essential R packages. It then sources numerous custom R functions stored in the `R/` directory that handle specific tasks like data preprocessing, model training, and visualization.
+
+## 2. Configuration and Setup
+
+```{r config}
+# Get command line arguments
+args <- commandArgs(trailingOnly = TRUE)
+experiment <- args[1]
+AEZ <- args[2]
+
+# Define AEZ list
+AEZ_list <- c("Warm.Semiarid", "Warm.Subhumid", "Warm.Humid",
+              "Cool.Semiarid", "Cool.Subhumid", "Cool.Humid")
+
+# Feature mapping for better interpretability
+feature_mapping <- c(
+  "Rain.Days.L.1" = "Fraction_Rainy_Days",
+  "Mean_clay_tot_psa" = "Clay",
+  "Mean_sand_tot_psa" = "Sand",
+  "Mean_ecec.f" = "ECEC",
+  "Mean_OC" = "OC",
+  "Presowing.Rain.sum" = "Presowing_Rainfall",
+  "Rain.sum" = "Total_Rainfall",
+  "Rain.sum.Dev.Mean" = "Total_Rainfall_Dev",
+  "Tmax.mean" = "Avg_Max_Temp",
+  "Rain.Days.L.1.Dev.Mean" = "Fraction_Rainy_Days_Dev",
+  "Rain.Max.RSeq.5" = "Longest_Dry_Spell",
+  "Tmax.mean.Dev.Mean" = "Avg_Max_Temp_Dev",
+  "yield" = "Yield"
+)
+```
+
+The script accepts command-line arguments for the experiment name and optionally an AEZ to analyze. It defines a list of all AEZs to analyze and creates a feature mapping to convert technical variable names to more readable names.
+
+## 3. Data Processing and Analysis
+
+The main part of the script contains a loop that processes each AEZ (Agro-Ecological Zone) one by one. For clarity, we'll examine the core components of this processing without repeating the loop structure.
+
+### Configuration and Parameter Setup
+
+```{r config_setup}
+# In the full script, this code is inside an AEZ loop
+# Manual settings for experiment name
+experiment <- "no_outliers_eco_isqrt_nosoil"
+experiment_t <- experiment  # Tracking original experiment name
+
+# Default AEZ if none specified
+AEZ <- "Warm.Semiarid"  
+
+# Load configuration from YAML file
+config <- yaml::read_yaml(paste0("config/", experiment, "_config.yaml"))
+
+# Set parameters for analysis
+create_colour_features <- TRUE  # Whether to create categorical feature indicators
+create_plotly <- TRUE  # Whether to create interactive plots
+n_bootstraps <- 99  # Number of bootstrap iterations for uncertainty quantification
+
+# Initialize data structures to store results
+# These will hold metrics and SHAP values for all bootstrap iterations
+bootstrap_results <- list(
+  train_metrics = list(),  # Performance on training data
+  oob_metrics = list(),    # Out-of-bag performance 
+  test_metrics = list(),   # Performance on test data
+  MDA_importance = list(), # Mean Decrease in Accuracy importance
+  shap_values = list()     # SHAP values for all features
+)
+
+# Similar structure for the full (non-bootstrapped) model
+full_results <- list(
+  train_metrics = list(),
+  oob_metrics = list(),
+  test_metrics = list(),
+  MDA_importance = list(),
+  shap_values = list()
+)
+```
+
+### Formula and Parameter Extraction
+
+```{r formula_processing}
+# Extract parameters from configuration
+data_path <- config$data_path    # Path to input data
+target <- config$target          # Target variable name (e.g., "yield")
+
+# Process the formula specified in the config
+# 1. Clean up whitespace and quotes
+formula_string <- gsub("\\s+", " ", config$general_formula)
+formula_string <- gsub('"', '', formula_string)
+formula_string <- trimws(formula_string)
+
+# 2. Convert to formula object
+general_formula <- as.formula(formula_string)
+
+# 3. Apply feature mapping for readability (e.g., "Rain.sum" → "Total_Rainfall")
+general_formula <- remap_formula(formula_string, feature_mapping)
+
+# Extract other configuration settings
+weighted <- config$weighted                                # Whether to use weighted sampling
+imputation_method <- config$preprocessing$imputation_method # Method for handling missing values
+lower_quantile <- config$preprocessing$lower_quantile      # Remove outliers below this quantile
+upper_quantile <- config$preprocessing$upper_quantile      # Remove outliers above this quantile
+train_prop <- config$splits$train_prop                     # Proportion for train/test split
+n_cv_folds <- config$splits$cv_folds                       # Number of cross-validation folds
+cv_seed <- config$splits$seed                              # Random seed for reproducibility
+```
+
+### Data Loading and Preprocessing
+
+```{r data_loading}
+# Load and preprocess data
+data <- load_and_preprocess(
+  data_path = data_path,         # Input data file path
+  target_col = target,           # Target variable (e.g., "yield")
+  cols_to_remove = NULL,         # Columns to exclude (none specified)
+  imputation_method = imputation_method, # Method for handling missing values
+  lower_quantile = lower_quantile,       # Filter outliers
+  upper_quantile = upper_quantile        # Filter outliers
+)
+
+# Create a summary of observations per AEZ for reporting
+N_obs_table <- data %>% select(AEZ16simple) %>% table()
+AEZ_table_names <- names(N_obs_table)
+N_obs_df <- data.frame(
+  AEZ = AEZ_list,
+  N_obs = as.numeric(N_obs_table[AEZ_list])
+)
+
+# Create visualization of AEZ distribution in the dataset
+plot_aez_distribution(data, experiment)
+
+# Apply feature mapping to data columns
+# This replaces technical names with more readable ones
+existing_cols <- names(feature_mapping)[names(feature_mapping) %in% names(data)]
+data <- data %>%
+  rename(!!!setNames(existing_cols, feature_mapping[existing_cols]))
+target <- str_replace_all(target, feature_mapping)
+
+# Extract feature list from formula and normalize data
+feature_list <- all.vars(general_formula)[-1]  # All variables except target
+normalized_data <- normalize_features(data, feature_list)
+
+# Filter data for the current AEZ
+# In the full script, this happens inside the AEZ loop
+data <- data %>%
+  filter(AEZ16simple == AEZ)
+experiment <- paste0(experiment, "_", AEZ)  # Update experiment name with AEZ
+```
+
+### Model Preparation and Training
+
+```{r model_preparation}
+# The script focuses on Random Forest (model_i = 2 in the config)
+model_i <- 2
+
+# Log-transform the target if needed
+if (config$models[[model_i]]$recipe_options$transformations) {
+  data[[target]] <- log(data[[target]] + 1)
+}
+
+# Handle weights for sampling if configured
+if (weighted) {
+  # Add case_weights to the formula
+  general_formula <- update(general_formula, . ~ . + case_weights)
+  
+  # Create weight_ID by combining site, year, and season
+  data <- data %>%
+    mutate(weight_ID = paste(Site.Key, M.Year, Season, sep = "_"))
+  
+  # Get the appropriate weighting function based on config
+  weight_func <- assign_weight_function(config$weighted_method)
+}
+
+# Split data into training and testing sets
+set.seed(cv_seed)
+init_split <- initial_split(
+  data,
+  prop = 0.8,               # 80% for training, 20% for testing
+  strata = !!sym(target)    # Stratify by the target variable
+)
+train_data <- training(init_split)
+test_data <- testing(init_split)
+
+# Add weights to training data if needed
+if (weighted) {
+  train_data <- train_data %>%
+    mutate(
+      # Calculate weights based on selected weighting method
+      case_weights = weight_func(train_data, "weight_ID"),
+      case_weights = importance_weights(case_weights)  # Convert to importance weights
+    )
+}
+```
+
+### Recipe Creation and Model Training
+
+```{r recipe_creation}
+# Create recipe for data preprocessing
+recipe <- create_recipe(
+  data = train_data, 
+  formula = general_formula,
+  # Pass through options from config
+  one_hot = config$models[[model_i]]$recipe_options$one_hot,             # Convert categoricals to binary
+  standardize = config$models[[model_i]]$recipe_options$standardize,     # Standardize numerics
+  normalize = config$models[[model_i]]$recipe_options$normalize,         # Normalize instead of standardize
+  augment = config$models[[model_i]]$recipe_options$augment,             # Add derived features
+  variable_selection = config$models[[model_i]]$recipe_options$variable_selection, # Feature selection
+  parallel = config$models[[model_i]]$recipe_options$parallel            # Use parallel processing
+)
+
+# Prepare the recipe and transform the data
+prepped_recipe <- prep(recipe, training = train_data)
+transformed_data <- bake(prepped_recipe, new_data = NULL)  # NULL means use training data
+
+# Train a Random Forest model on the full training dataset
+final_workflow <- train_simple_rf(
+  data = train_data,
+  target_col = target,
+  formula = general_formula,
+  rec = recipe,
+  mtry = 3,              # Number of variables considered at each split
+  trees = 1000,          # Number of trees in the forest
+  min_n = 25,            # Minimum node size
+  max.depth = 7          # Maximum tree depth
+)
+```
+
+### Model Evaluation and Feature Importance
+
+```{r model_evaluation}
+# Calculate performance metrics on training and test data
+all_metrics <- estimate_metrics_simple_rf(
+  final_workflow,
+  train_data,
+  test_data,
+  target_col = target
+)
+
+# Calculate variable importance using permutation
+variable_importance <- calculate_variable_importance(
+  trained_workflow = final_workflow,
+  model_name = config$models[[model_i]]$name,
+  output_dir = paste0("outputs/", experiment, "/full_results/")
+)
+
+# Extract Mean Decrease in Accuracy importance
+full_MDA_importance <- tibble(
+  variable = variable_importance$Variable, 
+  MDA_importance = variable_importance$Importance
+)
+
+# Calculate SHAP values for interpretability
+shap_values <- compute_shap_values(final_workflow, train_data)
+
+# Select columns to keep in the SHAP results
+columns_to_keep <- c(
+  # All predictors from the formula
+  all.vars(general_formula)[1:(length(all.vars(general_formula))-1)],
+  # All SHAP values
+  colnames(select(shap_values, starts_with("SHAP"))),
+  # Metadata columns for traceability
+  c("Code", "Author", "DOI", "Country", "Site.Key", 
+    "Lat", "Lon", "M.Year", "N.obs")
+)
+shap_values <- shap_values %>%
+  select(all_of(columns_to_keep))
+
+# Create and save observed vs. predicted plot
+scatter_plot <- create_and_save_obs_pred_plot(
+  workflow = final_workflow,
+  test_data = test_data,
+  target_col = target,
+  experiment = experiment_t,
+  AEZ = AEZ
+)
+```
+
+### Saving Results and Cross-Validation
+
+```{r save_results}
+# Store all results from the full model
+full_results$feature_importance <- full_MDA_importance
+full_results$train_metrics <- all_metrics$train_metrics
+full_results$oob_metrics <- all_metrics$oob_metrics
+full_results$test_metrics <- all_metrics$test_metrics
+full_results$shap_values <- shap_values
+full_results$data <- list(
+  normalized_data = tibble(normalized_data$normalized_data) %>%
+    filter(N.obs %in% train_data$N.obs),
+  norm_params = normalized_data$norm_params
+)
+
+# Create output directory and save full results
+output_dir_results <- paste0("outputs/", experiment, "/full_results")
+dir.create(output_dir_results, showWarnings = FALSE, recursive = TRUE)
+saveRDS(full_results, file = file.path(output_dir_results, "full_results.rds"))
+
+# Perform cross-validation for more robust SHAP importance
+cv_results <- estimate_ind_cv_performance(
+  data = train_data,
+  target_col = target,
+  formula = general_formula,
+  recipe = recipe,
+  n_folds = n_cv_folds,
+  experiment = experiment
+)
+cv_output_dir <- paste0("outputs/", experiment, "/full_results/")
+saveRDS(cv_results, file = file.path(cv_output_dir, "cv_results.rds"))
+```
+
+### Bootstrap Analysis Loop
+
+The most critical part of the script is the bootstrap loop, which quantifies uncertainty in the model predictions and feature importance:
+
+```{r bootstrap_loop}
+# Bootstrap loop - the heart of the uncertainty quantification
+for (bootstrap_i in 1:n_bootstraps) {
+  start_time <- Sys.time()
+  cat(paste0("Bootstrap ", bootstrap_i, "... \n"))
+  
+  # Create bootstrap sample by sampling with replacement
+  set.seed(bootstrap_i)
+  bootstrap_indices <- sample(nrow(train_data), size = nrow(train_data), replace = TRUE)
+  bootstrap_data <- train_data[bootstrap_indices, ]
+  
+  # Add weights if needed
+  if (weighted) {
+    bootstrap_data <- bootstrap_data %>%
+      mutate(
+        case_weights = weight_func(bootstrap_data, "weight_ID"),
+        case_weights = importance_weights(case_weights)
+      )
+  }
+  
+  # Create recipe for this bootstrap sample
+  recipe = create_recipe(data = bootstrap_data, 
+                         formula = general_formula,
+                         one_hot = config$models[[model_i]]$recipe_options$one_hot,
+                         standardize = config$models[[model_i]]$recipe_options$standardize,
+                         normalize = config$models[[model_i]]$recipe_options$normalize,
+                         augment = config$models[[model_i]]$recipe_options$augment,
+                         variable_selection = config$models[[model_i]]$recipe_options$variable_selection,
+                         parallel = config$models[[model_i]]$recipe_options$parallel)
+  
+  # Prepare recipe
+  prepped_recipe = prep(recipe, training = bootstrap_data)
+  transformed_data = bake(prepped_recipe, new_data = NULL)
+  
+  # Train model on this bootstrap sample
+  final_workflow <- train_simple_rf(data = bootstrap_data,
+                                  target_col = target,
+                                  formula = general_formula,
+                                  rec = recipe,
+                                  mtry = 3,
+                                  trees = 500,
+                                  min_n = 25,
+                                  max.depth = 7)
+  
+  # Evaluate model
+  all_metrics <- estimate_metrics_simple_rf(final_workflow,
+                                          bootstrap_data,
+                                          test_data,
+                                          target_col = target)
+  
+  # Store results for this bootstrap iteration
+  bootstrap_results$train_metrics[[bootstrap_i]] <- all_metrics$train_metrics
+  bootstrap_results$test_metrics[[bootstrap_i]] <- all_metrics$test_metrics
+  bootstrap_results$oob_metrics[[bootstrap_i]] <- all_metrics$oob_metrics
+  
+  # Calculate SHAP values
+  shap_values <- compute_shap_values(final_workflow, train_data)
+  columns_to_keep <- c(all.vars(general_formula)[1:(length(all.vars(general_formula))-1)],
+                       colnames(select(shap_values, starts_with("SHAP"))),
+                       c("Code", "Author", "DOI", "Country", "Site.Key", 
+                         "Lat", "Lon", "M.Year", "N.obs"))
+  shap_values <- shap_values %>%
+    select(all_of(columns_to_keep))
+  bootstrap_results$shap_values[[bootstrap_i]] <- shap_values
+  
+  # Log timing
+  end_time <- Sys.time()
+  cat(paste0("time: ", difftime(end_time, start_time, units = "secs"), " seconds\n"))
+}
+
+# Save bootstrap results
+output_dir_results <- paste0("outputs/", experiment, "/bootstrap_results")
+dir.create(output_dir_results, showWarnings = FALSE, recursive = TRUE)
+saveRDS(bootstrap_results, file = file.path(output_dir_results, "bootstrap_results.rds"))
+```
+
+### SHAP Plot Generation
+
+```{r shap_plotting}
+# Extract feature list from formula
+feature_list <- all.vars(general_formula)[-1]
+
+# Remove weights column if using weighted models
+if (weighted) feature_list <- feature_list[-length(feature_list)]
+
+# Create output directory for bootstrap plots
+output_dir <- paste0("outputs/", experiment, "/bootstrap_plots/")
+dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+
+# Create SHAP plots for each feature pair
+# This nested loop creates plots showing the effect of each feature
+# colored by every other feature, allowing for interaction detection
+for (var in feature_list) {
+  for (color_by in feature_list) {
+    # Only create plots for different features
+    if (var != color_by) {
+      #--------------------------------------------------------------
+      # 1. Standard bootstrap SHAP plot with percentile confidence bands
+      #--------------------------------------------------------------
+      plot <- plot_bootstrap_shap(
+        bootstrap_results = bootstrap_results,  # Results from all bootstrap iterations
+        full_results = full_results,            # Results from full model
+        feature = var,                          # Feature on x-axis
+        color_by = color_by,                    # Feature for coloring points
+        confidence_level = 0.95,                # 95% confidence level
+        title = NULL,                           # No custom title
+        AEZ = AEZ                               # Current AEZ
+      )
+      
+      # Save plot as PNG and RDS
+      ggsave(
+        filename = file.path(output_dir, paste0("shap_plot_", var, "_", color_by, ".png")),
+        plot = plot,
+        width = 8,
+        height = 6,
+        bg = "white"
+      )
+      saveRDS(object = plot,
+              file = file.path(output_dir, paste0("shap_plot_", var, "_", color_by, ".RDS")))
+      
+      #--------------------------------------------------------------
+      # 2. SHAP plot with GAM-fitted confidence intervals
+      #    This uses a smoothed approach for uncertainty visualization
+      #--------------------------------------------------------------
+      plot <- plot_bootstrap_shap_gamCI(
+        bootstrap_results = bootstrap_results,
+        full_results = full_results,
+        feature = var,
+        color_by = color_by,
+        confidence_level = 0.95,
+        title = NULL,
+        AEZ = AEZ,
+        geom_k = 8  # Smoothing parameter for GAM
+      )
+      
+      # Save GAM-smoothed plot
+      ggsave(
+        filename = file.path(output_dir, paste0("GAMCI_shap_plot_", var, "_", color_by, ".png")),
+        plot = plot,
+        width = 8,
+        height = 6,
+        bg = "white"
+      )
+      saveRDS(object = plot,
+              file = file.path(output_dir, paste0("GAMCI_shap_plot_", var, "_", color_by, ".RDS")))
+
+      #--------------------------------------------------------------
+      # 3. Improved SHAP visualization with enhanced aesthetics
+      #--------------------------------------------------------------
+      plot <- plot_bootstrap_shap_improved(
+        bootstrap_results = bootstrap_results,
+        full_results = full_results,
+        feature = var,
+        color_by = color_by,
+        confidence_level = 0.95,
+        title = NULL,
+        AEZ = AEZ
+      )
+      
+      # Save improved visualization
+      ggsave(
+        filename = file.path(output_dir, paste0("improv_shap_plot_", var, "_", color_by, ".png")),
+        plot = plot,
+        width = 8,
+        height = 6,
+        bg = "white"
+      )
+      saveRDS(object = plot,
+              file = file.path(output_dir, paste0("improv_shap_plot_", var, "_", color_by, ".RDS")))
+    }
+  }
+}
+```
+
+### Performance Metrics Summary
+
+```{r performance_summary}
+# Summarize bootstrap results for different datasets
+# This creates summary statistics of model performance with confidence intervals
+summarize_boots_performance(full_results, bootstrap_results, experiment, set = "train")
+summarize_boots_performance(full_results, bootstrap_results, experiment, set = "test")
+summarize_boots_performance(full_results, bootstrap_results, experiment, set = "oob")
+```
+
+## 4. Final Aggregation Across AEZs
+
+After processing all individual AEZs, the script creates summary tables and visualizations that combine results across all zones:
+
+```{r final_summary}
+# In the full script, this happens after the AEZ loop completes
+
+# Create model performance table across all AEZs
+# This summarizes metrics like RMSE, R², MAE for each AEZ
+performance_table <- create_performance_table(
+  aez_list = AEZ_list,              # List of all AEZs
+  experiment_t = experiment_t,      # Base experiment name
+  base_dir = "model_output",        # Output directory
+  N_obs_df = N_obs_df               # Number of observations per AEZ
+)
+
+# Create combined plot grid of predicted vs observed yields across AEZs
+# This allows visual comparison of model performance across regions
+combine_pred_obs_plots(
+  experiment = experiment_t,
+  aez_list = AEZ_list
+)
+
+# Save the final combined plots in different formats
+ggsave(paste0('final_results/', experiment_t, '_scatter_plots.png'))
+ggsave(
+  paste0('final_results/', experiment_t, '_scatter_plots.pdf'),
+  width = 180, 
+  height = 160,
+  units = "mm",
+  dpi = 300
+)
+```
+
+# Key Functions in the Script
+
+The script relies on numerous custom functions from external R files. Here are explanations of the core functions:
+
+## 1. Data Preparation and Model Training
+
+* `load_and_preprocess`: This function loads data from CSV files, removes outliers based on quantile thresholds, handles missing values using the specified imputation method, and prepares the data for modeling.
+
+* `normalize_features`: Standardizes numeric features by subtracting the mean and dividing by the standard deviation. This ensures all features have comparable scales during analysis.
+
+* `remap_formula`: Converts technical feature names to more readable names (e.g., "Rain.sum" → "Total_Rainfall") in model formulas.
+
+* `create_recipe`: Creates a tidymodels recipe for data preprocessing, handling categorical variables, standardization, and other transformations.
+
+* `train_simple_rf`: Trains a Random Forest model with specified parameters (mtry, trees, min_n, max.depth) using the ranger engine.
+
+## 2. Evaluation and Analysis
+
+* `estimate_metrics_simple_rf`: Calculates performance metrics (RMSE, R², MAE) for models on training, test, and out-of-bag data.
+
+* `calculate_variable_importance`: Determines feature importance using permutation-based methods, capturing how much model performance decreases when each feature is randomly shuffled.
+
+* `compute_shap_values`: Calculates SHAP (SHapley Additive exPlanations) values for model interpretability, showing how each feature contributes to predictions for each observation.
+
+* `estimate_ind_cv_performance`: Runs cross-validation to assess model performance variability and provide more robust feature importance estimates.
+
+## 3. Uncertainty Quantification
+
+* `plot_bootstrap_shap`: Creates SHAP plots with uncertainty bands derived from bootstrap resampling, showing how feature effects vary across bootstrap samples.
+
+* `plot_bootstrap_shap_gamCI`: Enhances SHAP visualization with smoothed confidence intervals using Generalized Additive Models.
+
+* `plot_bootstrap_shap_improved`: Creates visually enhanced SHAP plots with better aesthetics and more informative uncertainty visualization.
+
+* `summarize_boots_performance`: Summarizes performance metrics across bootstrap iterations, calculating mean, standard deviation, and confidence intervals.
+
+## 4. Visualization and Reporting
+
+* `create_and_save_obs_pred_plot`: Creates scatter plots of observed vs. predicted yield values.
+
+* `combine_pred_obs_plots`: Combines plots across AEZs for easy comparison.
+
+* `plot_aez_distribution`: Visualizes the distribution of observations across different Agro-Ecological Zones.
+
+* `create_performance_table`: Creates summary tables of model performance across all AEZs.
+
+# Key Components of the Analysis
+
+## 1. Bootstrap Resampling
+
+The core of the analysis is the bootstrap resampling approach, which involves:
+
+1. Creating 99 bootstrap samples by sampling with replacement from the training data
+2. Training a Random Forest model on each bootstrap sample
+3. Evaluating each model on both its bootstrap sample and the holdout test set
+4. Computing SHAP values for each model
+5. Using these results to quantify uncertainty in predictions and feature importance
+
+This approach provides robust estimates of model performance and feature effects, including confidence intervals that account for data variability.
+
+## 2. SHAP Analysis
+
+SHAP (SHapley Additive exPlanations) values explain model predictions by showing:
+
+1. How much each feature contributes to pushing the prediction higher or lower
+2. How feature effects vary across the feature range and interact with other features
+3. Which features have the most significant overall impact on predictions
+4. How reliable these effects are (when combined with bootstrap uncertainty)
+
+The script creates multiple types of SHAP visualizations to explore these relationships from different angles.
+
+## 3. AEZ Comparison
+
+By running the analysis separately for each AEZ, the script enables:
+
+1. Comparison of model performance across different ecological zones
+2. Identification of region-specific important features
+3. Understanding how climate-yield relationships vary by region
+4. Creation of targeted recommendations based on local conditions
+
+This regional approach recognizes that agricultural systems function differently across environments, avoiding one-size-fits-all conclusions.
+
+# Outputs and Interpretation
+
+The script produces several types of outputs:
+
+1. **Performance Metrics**: RMSE, R², and MAE for each model, with confidence intervals from bootstrapping.
+
+2. **Feature Importance Rankings**: Which factors most strongly influence yield predictions, with uncertainty estimates.
+
+3. **SHAP Interaction Plots**: How one feature's effect changes based on another feature's value (e.g., how the effect of rainfall varies with temperature).
+
+4. **Uncertainty Visualization**: Confidence bands showing the reliability of feature effects across bootstrap samples.
+
+These outputs help researchers understand:
+
+- The predictability of agricultural yields in different regions
+- Key factors driving yield variability
+- How environmental variables interact to affect yields
+- The reliability of these insights given data limitations
+
+# Conclusion
+
+The ERA data analysis script provides a comprehensive framework for analyzing agricultural yield data with uncertainty quantification. By using bootstrap resampling and SHAP values, it goes beyond simple prediction to provide robust insights into the relationships between environmental factors and crop yields across different agro-ecological zones.
+
+This analysis can help inform:
+
+- Region-specific agricultural management strategies
+- Climate adaptation approaches for agriculture
+- Research priorities for improving crop resilience
+- Policy development for agricultural sustainability
+
+The script's modular design allows for easy adaptation to different datasets, regions, or research questions within the agricultural domain.

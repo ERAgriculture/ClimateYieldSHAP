@@ -1,0 +1,230 @@
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ forcats   1.0.0     ✔ readr     2.1.5
+✔ ggplot2   3.5.0     ✔ tibble    3.2.1
+✔ lubridate 1.9.3     ✔ tidyr     1.3.1
+✔ purrr     1.0.2     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+── Attaching packages ────────────────────────────────────── tidymodels 1.2.0 ──
+✔ broom        1.0.5      ✔ rsample      1.2.1 
+✔ dials        1.3.0      ✔ tune         1.2.1 
+✔ infer        1.0.7      ✔ workflows    1.1.4 
+✔ modeldata    1.3.0      ✔ workflowsets 1.1.0 
+✔ parsnip      1.2.1      ✔ yardstick    1.3.1 
+✔ recipes      1.0.10     
+── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
+✖ scales::discard() masks purrr::discard()
+✖ dplyr::filter()   masks stats::filter()
+✖ recipes::fixed()  masks stringr::fixed()
+✖ dplyr::lag()      masks stats::lag()
+✖ yardstick::spec() masks readr::spec()
+✖ recipes::step()   masks stats::step()
+• Use tidymodels_prefer() to resolve common conflicts.
+
+Attaching package: ‘vip’
+
+The following object is masked from ‘package:utils’:
+
+    vi
+
+
+Attaching package: ‘pdp’
+
+The following object is masked from ‘package:purrr’:
+
+    partial
+
+Loading required package: DALEX
+Welcome to DALEX (version: 2.4.3).
+Find examples and detailed introduction at: http://ema.drwhy.ai/
+
+
+Attaching package: ‘DALEX’
+
+The following object is masked from ‘package:vip’:
+
+    titanic
+
+The following objects are masked from ‘package:treeshap’:
+
+    colors_breakdown_drwhy, colors_discrete_drwhy, theme_drwhy,
+    theme_drwhy_vertical
+
+The following object is masked from ‘package:dplyr’:
+
+    explain
+
+
+Attaching package: ‘rpart’
+
+The following object is masked from ‘package:dials’:
+
+    prune
+
+
+Attaching package: ‘rlang’
+
+The following objects are masked from ‘package:purrr’:
+
+    %@%, flatten, flatten_chr, flatten_dbl, flatten_int, flatten_lgl,
+    flatten_raw, invoke, splice
+
+Linking to GEOS 3.12.1, GDAL 3.8.3, PROJ 9.3.1; sf_use_s2() is TRUE
+
+Attaching package: ‘rnaturalearthdata’
+
+The following object is masked from ‘package:rnaturalearth’:
+
+    countries110
+
+Linking to librsvg 2.52.5
+Loading required package: carData
+
+Attaching package: ‘car’
+
+The following object is masked from ‘package:purrr’:
+
+    some
+
+The following object is masked from ‘package:dplyr’:
+
+    recode
+
+Loading required package: lattice
+
+Attaching package: ‘caret’
+
+The following objects are masked from ‘package:yardstick’:
+
+    precision, recall, sensitivity, specificity
+
+The following object is masked from ‘package:purrr’:
+
+    lift
+
+corrplot 0.92 loaded
+
+Attaching package: ‘fastshap’
+
+The following objects are masked from ‘package:DALEX’:
+
+    explain, titanic
+
+The following object is masked from ‘package:vip’:
+
+    gen_friedman
+
+The following object is masked from ‘package:dplyr’:
+
+    explain
+
+
+Attaching package: ‘janitor’
+
+The following objects are masked from ‘package:stats’:
+
+    chisq.test, fisher.test
+
+
+Attaching package: ‘plotly’
+
+The following object is masked from ‘package:ggplot2’:
+
+    last_plot
+
+The following object is masked from ‘package:stats’:
+
+    filter
+
+The following object is masked from ‘package:graphics’:
+
+    layout
+
+
+Attaching package: ‘xgboost’
+
+The following object is masked from ‘package:plotly’:
+
+    slice
+
+The following object is masked from ‘package:dplyr’:
+
+    slice
+
+Warning message:
+In normalizePath("/Users/alvaro/My Drive (acarmonacabrero@gmail.com)/Atlas Alvaro/workflow") :
+  path[1]="/Users/alvaro/My Drive (acarmonacabrero@gmail.com)/Atlas Alvaro/workflow": No such file or directory
+
+Data Preprocessing Summary:
+----------------------------
+
+1. Columns with missing values after imputation:
+   - T.NO: 83 missing values
+   - T.NI: 157 missing values
+   - Elevation: 2093 missing values
+   - MAT: 3205 missing values
+   - MAP: 2236 missing values
+   - TAP: 3918 missing values
+   - MSP: 4156 missing values
+   - TSP: 3878 missing values
+   - SOC: 2890 missing values
+   - SOC.Depth: 2878 missing values
+   - Soil.pH: 1773 missing values
+   - Harvest.Start: 1376 missing values
+   - Harvest.End: 1376 missing values
+   - Plot.Size: 504 missing values
+   - Season.Start: 2833 missing values
+   - Season.End: 2833 missing values
+   - Upper: 4893 missing values
+   - Lower: 4893 missing values
+   - MeanT.Error: 2521 missing values
+   - MeanC.Error: 2517 missing values
+   - Lat: 4780 missing values
+   - Lon: 4795 missing values
+   - Season: 2833 missing values
+   - Data.PS.Date: 4615 missing values
+   - Data.PE.Date: 4615 missing values
+   - SLen: 1376 missing values
+   - Data.SLen: 3533 missing values
+   - Rain.Start.End: 2274 missing values
+   - UnC.CHIRPS.P.Date: 2313 missing values
+   - M.Year.Code: 2833 missing values
+   - H.Diff: 1376 missing values
+
+2. Near-zero variance predictors detected (numeric only):
+   - T.NO
+   - Outcode
+   - Upper
+   - Lower
+   - Topt.low
+   - Topt.high
+   - Tlow
+   - Thigh
+   - cycle_min
+   - cycle_max
+   - SLen.EcoCrop
+   - GDDmax
+   - ETo.NA
+   - W.Start
+   - GDDmax.Dev.Mean
+   - GDDmax.Dev.Median
+   - Median_bdr
+   - Mode_bdr
+   Consider removing these predictors.
+Error: unexpected '}' in:
+"                            "/combined_shap_plot.png"), combined_plot, width = 12, height = 10
+                     }"
+Execution halted

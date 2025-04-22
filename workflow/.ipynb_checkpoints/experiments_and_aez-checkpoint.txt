@@ -1,0 +1,12 @@
+data_isqrt_nosoil Cool.Humid
+data_isqrt_nosoil Cool.Semiarid
+data_isqrt_nosoil Cool.Subhumid
+data_isqrt_nosoil Warm.Humid
+data_isqrt_nosoil Warm.Semiarid
+data_isqrt_nosoil Warm.Subhumid
+data_isqrt_soil Cool.Humid
+data_isqrt_soil Cool.Semiarid
+data_isqrt_soil Cool.Subhumid
+data_isqrt_soil Warm.Humid
+data_isqrt_soil Warm.Semiarid
+data_isqrt_soil Warm.Subhumid
