@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Álvaro Carmona-Cabrero" />
+
+<meta name="date" content="2025-05-14" />
+
+<title>Maize Yield Analysis with Climate and Soil Data</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Maize Yield Analysis with Climate and Soil
+Data</h1>
+<h4 class="author">Álvaro Carmona-Cabrero</h4>
+<h4 class="date">2025-05-14</h4>
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This vignette demonstrates a workflow for preparing and analyzing
+maize yield data in relation to climate and soil variables. The process
+includes data acquisition, cleaning, and transformation, with a
+particular focus on incorporating climate data into yield analysis. This
+workflow has been adapted from a vignette of the <em>ERA_dev</em>
+repository.</p>
+</div>
+<div id="setting-up-the-environment" class="section level2">
+<h2>Setting Up the Environment</h2>
+<p>First, we set up our global settings and load the necessary
+packages.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="do">### Settings</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>PROCESS_CLIMATE_FILES <span class="ot">&lt;-</span> <span class="cn">TRUE</span>  <span class="co"># Flag to process climate from ERA.Compiled</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>research_crop <span class="ot">&lt;-</span> <span class="st">&quot;Maize&quot;</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>research_target <span class="ot">&lt;-</span> <span class="st">&quot;Crop Yield&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>exclusion_buffer <span class="ot">&lt;-</span> <span class="dv">10000</span></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>M.ORIGIN <span class="ot">&lt;-</span> <span class="st">&quot;1900-01-01&quot;</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>cores <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="dv">1</span>, parallel<span class="sc">::</span><span class="fu">detectCores</span>() <span class="sc">-</span> <span class="dv">1</span>) <span class="co"># N cores for parallel processing</span></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>ID <span class="ot">&lt;-</span> <span class="st">&quot;Site.Key&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="do">### Load packages</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">require</span>(<span class="st">&quot;pacman&quot;</span>, <span class="at">character.only =</span> <span class="cn">TRUE</span>)){</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="fu">install.packages</span>(<span class="st">&quot;pacman&quot;</span>, <span class="at">dependencies =</span> T)</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>}</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&quot;R/ERAWide2Long_mod.R&quot;</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&quot;R/ERA_convert_units.R&quot;</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&quot;R/map_to_usda_texture.R&quot;</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">require</span>(<span class="st">&quot;ERAg&quot;</span>, <span class="at">character.only =</span> <span class="cn">TRUE</span>)){</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;https://github.com/EiA2030/ERAg&quot;</span>, <span class="at">dependencies =</span> T)</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>}</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(data.table, miceadds, dplyr, ERAgON, tidyverse)</span></code></pre></div>
+</div>
+<div id="processing-climate-data" class="section level2">
+<h2>Processing Climate Data</h2>
+<p>The next section processes climate data if the flag is set to TRUE.
+Notice that this parquet file is required to conduct the analysis
+“../databases/ERA/POWER.CHIRPS.parquet”. It should be available in the
+<a href="https://zenodo.org/records/15241882?token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6IjM0ODEwZDQzLThlYTItNDhhNC1hMDQ1LTIyMGRhMDZjYTI1NSIsImRhdGEiOnt9LCJyYW5kb20iOiJhNzk3OGE1NDQ5OTdjZjJlOGE3NzBkYmMwY2UxYzA2YiJ9.xc71ZaDofsfqKM2lYTT_8Ev227W_-_ddyB_0B3zwOxPiwIOPCHywv3XzBdu5HbNyoihWpIaUajIB2-ciCAxJjQ.">Zenodo
+record</a>.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="cf">if</span> (PROCESS_CLIMATE_FILES <span class="sc">==</span> <span class="cn">TRUE</span>){</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="do">### Load required packages for climate processing</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="cf">if</span>(<span class="sc">!</span><span class="fu">require</span>(<span class="st">&quot;pacman&quot;</span>, <span class="at">character.only =</span> <span class="cn">TRUE</span>)){</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>    <span class="fu">install.packages</span>(<span class="st">&quot;pacman&quot;</span>, <span class="at">dependencies =</span> T)</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  }</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  required.packages <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;data.table&quot;</span>, <span class="st">&quot;doSNOW&quot;</span>, <span class="st">&quot;ERAg&quot;</span>, <span class="st">&quot;ERAgON&quot;</span>, <span class="st">&quot;ncdf4&quot;</span>, </span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>                         <span class="st">&quot;raster&quot;</span>, <span class="st">&quot;sp&quot;</span>, <span class="st">&quot;terra&quot;</span>, <span class="st">&quot;arrow&quot;</span>, <span class="st">&quot;ggplot2&quot;</span>, <span class="st">&quot;circular&quot;</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>                         <span class="st">&quot;zoo&quot;</span>, <span class="st">&quot;pbapply&quot;</span>, <span class="st">&quot;dismo&quot;</span>, <span class="st">&quot;miceadds&quot;</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="fu">p_load</span>(<span class="at">char=</span>required.packages, <span class="at">install =</span> T, <span class="at">character.only =</span> T)</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="fu">source</span>(<span class="st">&#39;R/local_CalcClimate.R&#39;</span>)</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  </span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  <span class="do">### Create directories for outputs</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  AnalysisDir <span class="ot">&lt;-</span> <span class="st">&quot;ERA Climate Analysis/&quot;</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>  ErrorDir <span class="ot">&lt;-</span> <span class="fu">paste0</span>(AnalysisDir, <span class="st">&quot;Potential Errors/&quot;</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>  CROP_dir <span class="ot">&lt;-</span> <span class="fu">paste0</span>(AnalysisDir, <span class="st">&quot;Crops/&quot;</span>)</span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>  </span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>  <span class="co"># Create directories if they don&#39;t exist</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>  <span class="cf">for</span>(dir <span class="cf">in</span> <span class="fu">c</span>(AnalysisDir, ErrorDir, CROP_dir)) {</span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>    <span class="cf">if</span>(<span class="sc">!</span><span class="fu">dir.exists</span>(dir)) <span class="fu">dir.create</span>(dir)</span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>  }</span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>  </span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>  <span class="do">### Get ERA data and apply filters</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>  ERA <span class="ot">&lt;-</span> ERAg<span class="sc">::</span>ERA.Compiled[Buffer <span class="sc">&lt;</span> exclusion_buffer]</span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>  </span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>  <span class="do">### Prepare ERA dataset</span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a>  ERA[Season.Start<span class="sc">==</span><span class="dv">1</span> <span class="sc">&amp;</span> Season.End<span class="sc">==</span><span class="dv">1</span>, Season<span class="sc">:=</span><span class="st">&quot;1&quot;</span></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a>     ][Season.Start<span class="sc">==</span><span class="dv">2</span> <span class="sc">&amp;</span> Season.End<span class="sc">==</span><span class="dv">2</span>, Season<span class="sc">:=</span><span class="st">&quot;2&quot;</span></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a>       ][Season.Start<span class="sc">==</span><span class="dv">1</span> <span class="sc">&amp;</span> Season.End<span class="sc">==</span><span class="dv">2</span>, Season<span class="sc">:=</span><span class="st">&quot;1&amp;2&quot;</span></span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a>         ][M.Year<span class="sc">==</span><span class="st">&quot;&quot;</span>, M.Year<span class="sc">:=</span><span class="cn">NA</span></span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a>           ][Season<span class="sc">==</span><span class="st">&quot;&quot;</span>, Season<span class="sc">:=</span><span class="cn">NA</span>]</span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a>  </span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a>  ERA[, Harvest.Start<span class="sc">:=</span><span class="fu">as.Date</span>(Harvest.Start, <span class="st">&quot;%d.%m.%Y&quot;</span>)</span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a>     ][, Harvest.End<span class="sc">:=</span><span class="fu">as.Date</span>(Harvest.End, <span class="st">&quot;%d.%m.%Y&quot;</span>)</span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a>       ][, Plant.Start<span class="sc">:=</span><span class="fu">as.Date</span>(Plant.Start, <span class="st">&quot;%d.%m.%Y&quot;</span>)</span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a>         ][, Plant.End<span class="sc">:=</span><span class="fu">as.Date</span>(Plant.End, <span class="st">&quot;%d.%m.%Y&quot;</span>)]</span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a>  </span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a>  <span class="co"># Add elevation data</span></span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a>  Physical <span class="ot">&lt;-</span> <span class="fu">data.table</span>(ERAgON<span class="sc">::</span>ERA_Physical)</span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a>  ERA[<span class="sc">!</span><span class="fu">is.na</span>(Latitude), Altitude.DEM<span class="sc">:=</span>Physical[<span class="fu">match</span>(<span class="fu">unlist</span>(</span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a>    ERA[<span class="sc">!</span><span class="fu">is.na</span>(Latitude), ..ID]), <span class="fu">unlist</span>(Physical[, ..ID])), Altitude.mean]]</span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a>  ERA[, Altitude<span class="sc">:=</span>Elevation][<span class="fu">is.na</span>(Altitude)<span class="sc">|</span>Altitude<span class="sc">==</span><span class="st">&quot;&quot;</span>, Altitude<span class="sc">:=</span>Altitude.DEM]</span>
+<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a>  </span>
+<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a>  <span class="co"># Subset to maize yield data</span></span>
+<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a>  ERA.Yields <span class="ot">&lt;-</span> ERA[Out.SubInd <span class="sc">==</span> research_target <span class="sc">&amp;</span></span>
+<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a>                    (M.Year.Start <span class="sc">==</span> M.Year.End <span class="sc">&amp;</span></span>
+<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a>                     (Season <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>) <span class="sc">|</span> <span class="fu">is.na</span>(Season))) <span class="sc">&amp;</span></span>
+<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a>                    Product <span class="sc">%in%</span> research_crop <span class="sc">&amp;</span></span>
+<span id="cb3-48"><a href="#cb3-48" tabindex="-1"></a>                    <span class="sc">!</span><span class="fu">grepl</span>(<span class="st">&quot; x |-&quot;</span>, Product)]</span>
+<span id="cb3-49"><a href="#cb3-49" tabindex="-1"></a>  </span>
+<span id="cb3-50"><a href="#cb3-50" tabindex="-1"></a>  <span class="co"># Process POWER.CHIRPS data</span></span>
+<span id="cb3-51"><a href="#cb3-51" tabindex="-1"></a>  unique_site_keys <span class="ot">&lt;-</span> <span class="fu">unique</span>(ERA.Yields<span class="sc">$</span>Site.Key)</span>
+<span id="cb3-52"><a href="#cb3-52" tabindex="-1"></a>  POWER.CHIRPS <span class="ot">&lt;-</span> arrow<span class="sc">::</span><span class="fu">read_parquet</span>(<span class="st">&quot;../databases/ERA/POWER.CHIRPS.parquet&quot;</span>)</span>
+<span id="cb3-53"><a href="#cb3-53" tabindex="-1"></a>  POWER.CHIRPS <span class="ot">&lt;-</span> POWER.CHIRPS[Site.Key <span class="sc">%in%</span> unique_site_keys]</span>
+<span id="cb3-54"><a href="#cb3-54" tabindex="-1"></a>  </span>
+<span id="cb3-55"><a href="#cb3-55" tabindex="-1"></a>  <span class="co"># Add EcoCrop data</span></span>
+<span id="cb3-56"><a href="#cb3-56" tabindex="-1"></a>  ERA.Yields <span class="ot">&lt;-</span> <span class="fu">cbind</span>(ERA.Yields, ERAgON<span class="sc">::</span><span class="fu">AddEcoCrop</span>(<span class="at">Products =</span> ERA.Yields[, Product]))</span>
+<span id="cb3-57"><a href="#cb3-57" tabindex="-1"></a>  </span>
+<span id="cb3-58"><a href="#cb3-58" tabindex="-1"></a>  <span class="co"># Calculate ETo if absent</span></span>
+<span id="cb3-59"><a href="#cb3-59" tabindex="-1"></a>  <span class="cf">if</span>(POWER.CHIRPS[, <span class="fu">is.null</span>(ETo)]){</span>
+<span id="cb3-60"><a href="#cb3-60" tabindex="-1"></a>    POWER.CHIRPS[, ETo<span class="sc">:=</span>ERAgON<span class="sc">::</span><span class="fu">PETcalc</span>(<span class="at">Tmin=</span>Temp.Min,</span>
+<span id="cb3-61"><a href="#cb3-61" tabindex="-1"></a>                                       <span class="at">Tmax=</span>Temp.Max,</span>
+<span id="cb3-62"><a href="#cb3-62" tabindex="-1"></a>                                       <span class="at">SRad=</span>Solar.Rad,</span>
+<span id="cb3-63"><a href="#cb3-63" tabindex="-1"></a>                                       <span class="at">Wind=</span>WindSpeed,</span>
+<span id="cb3-64"><a href="#cb3-64" tabindex="-1"></a>                                       <span class="at">Rain=</span>Rain,</span>
+<span id="cb3-65"><a href="#cb3-65" tabindex="-1"></a>                                       <span class="at">Pressure=</span>Pressure,</span>
+<span id="cb3-66"><a href="#cb3-66" tabindex="-1"></a>                                       <span class="at">Humid=</span>Humid,</span>
+<span id="cb3-67"><a href="#cb3-67" tabindex="-1"></a>                                       <span class="at">YearDay=</span>Day,</span>
+<span id="cb3-68"><a href="#cb3-68" tabindex="-1"></a>                                       <span class="at">Latitude=</span>Latitude,</span>
+<span id="cb3-69"><a href="#cb3-69" tabindex="-1"></a>                                       <span class="at">Altitude=</span>Altitude)[, <span class="dv">1</span>]]</span>
+<span id="cb3-70"><a href="#cb3-70" tabindex="-1"></a>  }</span>
+<span id="cb3-71"><a href="#cb3-71" tabindex="-1"></a>  </span>
+<span id="cb3-72"><a href="#cb3-72" tabindex="-1"></a>  <span class="co"># Ensure correct data types</span></span>
+<span id="cb3-73"><a href="#cb3-73" tabindex="-1"></a>  POWER.CHIRPS[, Site.Key <span class="sc">:=</span><span class="fu">as.factor</span>(Site.Key)</span>
+<span id="cb3-74"><a href="#cb3-74" tabindex="-1"></a>              ][, Year<span class="sc">:=</span><span class="fu">as.factor</span>(Year)</span>
+<span id="cb3-75"><a href="#cb3-75" tabindex="-1"></a>                ][, Day<span class="sc">:=</span><span class="fu">as.factor</span>(Day)</span>
+<span id="cb3-76"><a href="#cb3-76" tabindex="-1"></a>                  ][, Altitude<span class="sc">:=</span><span class="fu">as.integer</span>(Altitude)]</span>
+<span id="cb3-77"><a href="#cb3-77" tabindex="-1"></a>  </span>
+<span id="cb3-78"><a href="#cb3-78" tabindex="-1"></a>  <span class="co"># Estimate missing planting dates and season lengths</span></span>
+<span id="cb3-79"><a href="#cb3-79" tabindex="-1"></a>  ERA.Yields <span class="ot">&lt;-</span> <span class="fu">EstPDayData</span>(<span class="at">DATA=</span>ERA.Yields)<span class="sc">$</span>DATA</span>
+<span id="cb3-80"><a href="#cb3-80" tabindex="-1"></a>  ERA.Yields <span class="ot">&lt;-</span> <span class="fu">EstSLenData</span>(<span class="at">DATA=</span>ERA.Yields)</span>
+<span id="cb3-81"><a href="#cb3-81" tabindex="-1"></a>  </span>
+<span id="cb3-82"><a href="#cb3-82" tabindex="-1"></a>  <span class="co"># Refine crop cycle lengths</span></span>
+<span id="cb3-83"><a href="#cb3-83" tabindex="-1"></a>  A <span class="ot">&lt;-</span> ERA.Yields</span>
+<span id="cb3-84"><a href="#cb3-84" tabindex="-1"></a>  A <span class="ot">&lt;-</span> <span class="fu">unique</span>(A[<span class="sc">!</span>(<span class="fu">is.na</span>(Plant.Start)<span class="sc">|</span><span class="fu">is.na</span>(Plant.End)<span class="sc">|</span><span class="fu">is.na</span>(Harvest.End)<span class="sc">|</span><span class="fu">is.na</span>(Harvest.End))</span>
+<span id="cb3-85"><a href="#cb3-85" tabindex="-1"></a>              ][, <span class="at">PLANT.AVG:=</span>Plant.Start<span class="sc">+</span>(Plant.End<span class="sc">-</span>Plant.Start)<span class="sc">/</span><span class="dv">2</span></span>
+<span id="cb3-86"><a href="#cb3-86" tabindex="-1"></a>                ][, <span class="at">HARVEST.AVG:=</span>Harvest.Start<span class="sc">+</span>(Harvest.End<span class="sc">-</span>Harvest.Start)<span class="sc">/</span><span class="dv">2</span></span>
+<span id="cb3-87"><a href="#cb3-87" tabindex="-1"></a>                  ][<span class="sc">!</span>(((Plant.End<span class="sc">-</span>Plant.Start)<span class="sc">&gt;</span><span class="dv">7</span>)<span class="sc">|</span>((Harvest.End<span class="sc">-</span>Harvest.Start)<span class="sc">&gt;</span><span class="dv">7</span>))</span>
+<span id="cb3-88"><a href="#cb3-88" tabindex="-1"></a>                    ][, <span class="at">SLEN:=</span><span class="fu">round</span>(HARVEST.AVG<span class="sc">-</span>PLANT.AVG,<span class="dv">0</span>)</span>
+<span id="cb3-89"><a href="#cb3-89" tabindex="-1"></a>                      ][<span class="sc">!</span>SLEN<span class="sc">&lt;</span><span class="dv">30</span>, <span class="fu">c</span>(<span class="st">&quot;Product&quot;</span>, ..ID, <span class="st">&quot;Code&quot;</span>, <span class="st">&quot;Variety&quot;</span>, <span class="st">&quot;M.Year&quot;</span>, <span class="st">&quot;PLANT.AVG&quot;</span>, <span class="st">&quot;SLEN&quot;</span>, <span class="st">&quot;Country&quot;</span>)])</span>
+<span id="cb3-90"><a href="#cb3-90" tabindex="-1"></a>  </span>
+<span id="cb3-91"><a href="#cb3-91" tabindex="-1"></a>  B <span class="ot">&lt;-</span> A[, <span class="fu">list</span>(<span class="at">SLEN.mean=</span><span class="fu">mean</span>(SLEN), <span class="at">SLEN.med=</span><span class="fu">median</span>(SLEN), <span class="at">N=</span>.N), by<span class="ot">=</span><span class="fu">c</span>(<span class="st">&quot;Product&quot;</span>)</span>
+<span id="cb3-92"><a href="#cb3-92" tabindex="-1"></a>       ][, SLEN.mean<span class="sc">:=</span><span class="fu">round</span>(<span class="fu">as.numeric</span>(SLEN.mean), <span class="dv">0</span>)</span>
+<span id="cb3-93"><a href="#cb3-93" tabindex="-1"></a>         ][, SLEN.med<span class="sc">:=</span><span class="fu">round</span>(<span class="fu">as.numeric</span>(SLEN.med), <span class="dv">0</span>)]</span>
+<span id="cb3-94"><a href="#cb3-94" tabindex="-1"></a>  </span>
+<span id="cb3-95"><a href="#cb3-95" tabindex="-1"></a>  B[, SLEN.EcoC<span class="sc">:=</span><span class="fu">round</span>(<span class="fu">apply</span>(ERA.Yields[<span class="fu">match</span>(B<span class="sc">$</span>Product, ERA.Yields<span class="sc">$</span>Product), <span class="fu">c</span>(<span class="st">&quot;cycle_min&quot;</span>,<span class="st">&quot;cycle_max&quot;</span>)], <span class="dv">1</span>, mean), <span class="dv">0</span>)]</span>
+<span id="cb3-96"><a href="#cb3-96" tabindex="-1"></a>  </span>
+<span id="cb3-97"><a href="#cb3-97" tabindex="-1"></a>  <span class="co"># Use estimated crop lengths where we have enough observations</span></span>
+<span id="cb3-98"><a href="#cb3-98" tabindex="-1"></a>  B <span class="ot">&lt;-</span> B[N<span class="sc">&gt;=</span><span class="dv">5</span>]</span>
+<span id="cb3-99"><a href="#cb3-99" tabindex="-1"></a>  <span class="fu">fwrite</span>(B, <span class="fu">paste0</span>(CROP_dir, <span class="st">&quot;Crop Season Lengths Estimated From Data.csv&quot;</span>))</span>
+<span id="cb3-100"><a href="#cb3-100" tabindex="-1"></a>  </span>
+<span id="cb3-101"><a href="#cb3-101" tabindex="-1"></a>  <span class="co"># Update EcoCrop values with our estimates</span></span>
+<span id="cb3-102"><a href="#cb3-102" tabindex="-1"></a>  N <span class="ot">&lt;-</span> <span class="fu">match</span>(ERA.Yields<span class="sc">$</span>Product, B<span class="sc">$</span>Product)</span>
+<span id="cb3-103"><a href="#cb3-103" tabindex="-1"></a>  N1 <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="sc">!</span><span class="fu">is.na</span>(N))</span>
+<span id="cb3-104"><a href="#cb3-104" tabindex="-1"></a>  ERA.Yields<span class="sc">$</span>cycle_min[N1] <span class="ot">&lt;-</span> B<span class="sc">$</span>SLEN.med[N[N1]]</span>
+<span id="cb3-105"><a href="#cb3-105" tabindex="-1"></a>  ERA.Yields<span class="sc">$</span>cycle_max[N1] <span class="ot">&lt;-</span> B<span class="sc">$</span>SLEN.med[N[N1]]</span>
+<span id="cb3-106"><a href="#cb3-106" tabindex="-1"></a>  </span>
+<span id="cb3-107"><a href="#cb3-107" tabindex="-1"></a>  <span class="co"># Refine planting dates using rainfall data</span></span>
+<span id="cb3-108"><a href="#cb3-108" tabindex="-1"></a>  ERA.Yields <span class="ot">&lt;-</span> <span class="fu">EstPDayRain</span>(<span class="at">Data=</span>ERA.Yields, </span>
+<span id="cb3-109"><a href="#cb3-109" tabindex="-1"></a>                           <span class="at">ID=</span>ID, </span>
+<span id="cb3-110"><a href="#cb3-110" tabindex="-1"></a>                           <span class="at">Rain.Data=</span>POWER.CHIRPS,</span>
+<span id="cb3-111"><a href="#cb3-111" tabindex="-1"></a>                           <span class="at">Rain.Data.Name=</span><span class="st">&quot;CHIRPS&quot;</span>, </span>
+<span id="cb3-112"><a href="#cb3-112" tabindex="-1"></a>                           <span class="at">Rain.Field=</span><span class="st">&quot;Rain&quot;</span>, </span>
+<span id="cb3-113"><a href="#cb3-113" tabindex="-1"></a>                           <span class="at">DaysBefore=</span><span class="dv">2</span>,</span>
+<span id="cb3-114"><a href="#cb3-114" tabindex="-1"></a>                           <span class="at">MultiplyWin=</span><span class="dv">1</span>, </span>
+<span id="cb3-115"><a href="#cb3-115" tabindex="-1"></a>                           <span class="at">Window=</span><span class="fu">c</span>(<span class="dv">14</span>,<span class="dv">14</span>), </span>
+<span id="cb3-116"><a href="#cb3-116" tabindex="-1"></a>                           <span class="at">Widths=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">3</span>), </span>
+<span id="cb3-117"><a href="#cb3-117" tabindex="-1"></a>                           <span class="at">Rain.Thresholds=</span><span class="fu">c</span>(<span class="dv">30</span>,<span class="dv">20</span>,<span class="dv">15</span>), </span>
+<span id="cb3-118"><a href="#cb3-118" tabindex="-1"></a>                           <span class="at">Uncertainty.Min=</span><span class="dv">7</span>, </span>
+<span id="cb3-119"><a href="#cb3-119" tabindex="-1"></a>                           <span class="at">Uncertainty.Max=</span><span class="dv">90</span>, </span>
+<span id="cb3-120"><a href="#cb3-120" tabindex="-1"></a>                           <span class="at">Add.Values=</span>T, </span>
+<span id="cb3-121"><a href="#cb3-121" tabindex="-1"></a>                           <span class="at">Use.Data.Dates=</span>T)</span>
+<span id="cb3-122"><a href="#cb3-122" tabindex="-1"></a>  </span>
+<span id="cb3-123"><a href="#cb3-123" tabindex="-1"></a>  <span class="co"># Calculate climate variables</span></span>
+<span id="cb3-124"><a href="#cb3-124" tabindex="-1"></a>  Climate <span class="ot">&lt;-</span> <span class="fu">local_CalcClimate</span>(<span class="at">DATA=</span>ERA.Yields,</span>
+<span id="cb3-125"><a href="#cb3-125" tabindex="-1"></a>                             <span class="at">ID=</span>ID,</span>
+<span id="cb3-126"><a href="#cb3-126" tabindex="-1"></a>                             <span class="at">CLIMATE=</span>POWER.CHIRPS,</span>
+<span id="cb3-127"><a href="#cb3-127" tabindex="-1"></a>                             <span class="at">Rain.Data.Name=</span><span class="st">&quot;CHIRPS&quot;</span>, </span>
+<span id="cb3-128"><a href="#cb3-128" tabindex="-1"></a>                             <span class="at">Temp.Data.Name=</span><span class="st">&quot;POWER&quot;</span>,</span>
+<span id="cb3-129"><a href="#cb3-129" tabindex="-1"></a>                             <span class="at">Rain.Windows=</span><span class="fu">c</span>(<span class="dv">6</span><span class="sc">*</span><span class="dv">7</span>,<span class="dv">4</span><span class="sc">*</span><span class="dv">7</span>,<span class="dv">2</span><span class="sc">*</span><span class="dv">7</span>,<span class="dv">2</span><span class="sc">*</span><span class="dv">7</span>),</span>
+<span id="cb3-130"><a href="#cb3-130" tabindex="-1"></a>                             <span class="at">Widths=</span><span class="fu">c</span>(<span class="dv">3</span>,<span class="dv">3</span>,<span class="dv">2</span>,<span class="dv">2</span>),</span>
+<span id="cb3-131"><a href="#cb3-131" tabindex="-1"></a>                             <span class="at">Rain.Threshold=</span><span class="fu">c</span>(<span class="dv">30</span>,<span class="dv">30</span>,<span class="dv">20</span>,<span class="dv">15</span>), </span>
+<span id="cb3-132"><a href="#cb3-132" tabindex="-1"></a>                             <span class="at">Win.Start=</span><span class="sc">-</span><span class="dv">3</span>,</span>
+<span id="cb3-133"><a href="#cb3-133" tabindex="-1"></a>                             <span class="at">Max.LT.Avg=</span><span class="dv">2010</span>, </span>
+<span id="cb3-134"><a href="#cb3-134" tabindex="-1"></a>                             <span class="at">Do.LT.Avg=</span>T, </span>
+<span id="cb3-135"><a href="#cb3-135" tabindex="-1"></a>                             <span class="at">Do.BioClim=</span>T, </span>
+<span id="cb3-136"><a href="#cb3-136" tabindex="-1"></a>                             <span class="at">Windows=</span><span class="fu">data.table</span>(<span class="at">Name=</span><span class="st">&quot;Plant.1-30&quot;</span>, <span class="at">Start=</span><span class="dv">1</span>, <span class="at">End=</span><span class="dv">30</span>), </span>
+<span id="cb3-137"><a href="#cb3-137" tabindex="-1"></a>                             <span class="at">SaveDir=</span>AnalysisDir,</span>
+<span id="cb3-138"><a href="#cb3-138" tabindex="-1"></a>                             <span class="at">ErrorDir=</span><span class="cn">NA</span>,</span>
+<span id="cb3-139"><a href="#cb3-139" tabindex="-1"></a>                             <span class="at">ROUND=</span><span class="dv">3</span>)</span>
+<span id="cb3-140"><a href="#cb3-140" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div id="data-preparation-for-analysis" class="section level2">
+<h2>Data Preparation for Analysis</h2>
+<p>After processing the climate data, we proceed with loading the
+processed data, preparing it for analysis, and merging climate, soil,
+and yield data.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="do">### Change ID column for merging</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>ID <span class="ot">&lt;-</span> <span class="st">&quot;ID&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="do">### Set working directory for climate data</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>ClimDir <span class="ot">&lt;-</span> <span class="st">&quot;ERA Climate Analysis/Analysis/422814143322303020152010130-3POWCHIFALSE0.6/&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">dir.exists</span>(ClimDir)){</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  <span class="fu">dir.create</span>(ClimDir)</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>}</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="do">### Load processed data</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>ClimateA <span class="ot">&lt;-</span> <span class="fu">load</span>(<span class="fu">paste0</span>(ClimDir, <span class="st">&quot;ClimStatsA.RData&quot;</span>))</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>ERA <span class="ot">&lt;-</span> <span class="fu">load</span>(<span class="fu">paste0</span>(ClimDir, <span class="st">&quot;Data.RData&quot;</span>))</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>Soils <span class="ot">&lt;-</span> ERAgON<span class="sc">::</span>ERA_ISDA</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="do">### Prepare ERA data and apply filters</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="fu">setDT</span>(DATA)</span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>DATA <span class="ot">&lt;-</span> data.table<span class="sc">::</span><span class="fu">copy</span>(DATA)</span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>climate_ids <span class="ot">&lt;-</span> <span class="fu">unique</span>(Seasonal<span class="sc">$</span>Observed[, ID])</span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a>DATA <span class="ot">&lt;-</span> DATA[Product <span class="sc">==</span> research_crop <span class="sc">&amp;</span></span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a>             <span class="sc">!</span><span class="fu">grepl</span>(<span class="st">&quot;</span><span class="sc">\\</span><span class="st">.</span><span class="sc">\\</span><span class="st">.&quot;</span>, Site.ID) <span class="sc">&amp;</span></span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a>             Irrigation.C <span class="sc">==</span> <span class="cn">FALSE</span> <span class="sc">&amp;</span> Irrigation.T <span class="sc">==</span> <span class="cn">FALSE</span> <span class="sc">&amp;</span></span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a>             Site.Type <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Station&quot;</span>, <span class="st">&quot;Station.Farm&quot;</span>, <span class="st">&quot;Farm&quot;</span>, <span class="st">&quot;Farm &amp; Station&quot;</span>) <span class="sc">&amp;</span></span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a>             (<span class="fu">is.na</span>(Mulch.Code) <span class="sc">|</span> Mulch.Code <span class="sc">!=</span> <span class="st">&quot;b26&quot;</span>) <span class="sc">&amp;</span></span>
+<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a>             Code <span class="sc">!=</span> <span class="st">&quot;EO0006&quot;</span> <span class="sc">&amp;</span></span>
+<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a>             Site.Key <span class="sc">%in%</span> climate_ids <span class="sc">&amp;</span></span>
+<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a>             <span class="fu">nchar</span>(M.Year) <span class="sc">&lt;</span> <span class="dv">7</span> <span class="sc">&amp;</span></span>
+<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a>             <span class="sc">!</span>(T1 <span class="sc">==</span> <span class="st">&quot;b26&quot;</span> <span class="sc">|</span> T2 <span class="sc">==</span> <span class="st">&quot;b26&quot;</span> <span class="sc">|</span> T3 <span class="sc">==</span> <span class="st">&quot;b26&quot;</span> <span class="sc">|</span> T4 <span class="sc">==</span> <span class="st">&quot;b26&quot;</span> <span class="sc">|</span> </span>
+<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a>               T5 <span class="sc">==</span> <span class="st">&quot;b26&quot;</span> <span class="sc">|</span> T6 <span class="sc">==</span> <span class="st">&quot;b26&quot;</span> <span class="sc">|</span> T7 <span class="sc">==</span> <span class="st">&quot;b26&quot;</span> <span class="sc">|</span> T8 <span class="sc">==</span> <span class="st">&quot;b26&quot;</span>)]</span>
+<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a></span>
+<span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a>era_ids <span class="ot">&lt;-</span> <span class="fu">unique</span>(DATA[, ID])</span>
+<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a></span>
+<span id="cb4-34"><a href="#cb4-34" tabindex="-1"></a><span class="do">### Basic data check</span></span>
+<span id="cb4-35"><a href="#cb4-35" tabindex="-1"></a>high_yields <span class="ot">&lt;-</span> DATA[MeanT <span class="sc">&gt;</span> <span class="dv">10000</span>, ]</span>
+<span id="cb4-36"><a href="#cb4-36" tabindex="-1"></a><span class="fu">print</span>(DATA[Code <span class="sc">%in%</span> high_yields<span class="sc">$</span>Code, MeanT])</span>
+<span id="cb4-37"><a href="#cb4-37" tabindex="-1"></a><span class="fu">hist</span>(DATA[, MeanT])</span></code></pre></div>
+</div>
+<div id="preparing-soil-data" class="section level2">
+<h2>Preparing Soil Data</h2>
+<p>Next, we prepare the soil data for integration with the climate and
+yield data.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="do">### Prepare Soils data</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>Soils <span class="ot">&lt;-</span> Soils[Site.Key <span class="sc">%in%</span> era_ids, ]</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co"># Process depth information</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>Soils[<span class="fu">grepl</span>(<span class="st">&quot;0..200cm&quot;</span>, Variable), Depth.Upper<span class="sc">:=</span><span class="dv">0</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>     ][<span class="fu">grepl</span>(<span class="st">&quot;0..200cm&quot;</span>, Variable), Depth.Lower<span class="sc">:=</span><span class="dv">200</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>       ][, Variable<span class="sc">:=</span><span class="fu">gsub</span>(<span class="st">&quot;_m_30m_0..200cm&quot;</span>, <span class="st">&quot;&quot;</span>, Variable)]</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>Soils[<span class="fu">grepl</span>(<span class="st">&quot;0..20cm&quot;</span>, Variable), Depth.Upper<span class="sc">:=</span><span class="dv">0</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>     ][<span class="fu">grepl</span>(<span class="st">&quot;0..20cm&quot;</span>, Variable), Depth.Lower<span class="sc">:=</span><span class="dv">20</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>       ][, Variable<span class="sc">:=</span><span class="fu">gsub</span>(<span class="st">&quot;_m_30m_0..20cm&quot;</span>, <span class="st">&quot;&quot;</span>, Variable)]</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>Soils[<span class="fu">grepl</span>(<span class="st">&quot;20..50cm&quot;</span>, Variable), Depth.Upper<span class="sc">:=</span><span class="dv">20</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>     ][<span class="fu">grepl</span>(<span class="st">&quot;20..50cm&quot;</span>, Variable), Depth.Lower<span class="sc">:=</span><span class="dv">50</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>       ][, Variable<span class="sc">:=</span><span class="fu">gsub</span>(<span class="st">&quot;_m_30m_20..50cm&quot;</span>, <span class="st">&quot;&quot;</span>, Variable)]</span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co"># Calculate weighted averages by depth</span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a>Soils[, Weight<span class="sc">:=</span>Depth.Lower<span class="sc">-</span>Depth.Upper]</span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a>Soils <span class="ot">&lt;-</span> <span class="fu">unique</span>(Soils[, <span class="fu">list</span>(<span class="at">Median=</span><span class="fu">weighted.mean</span>(Median, Weight),</span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a>                           <span class="at">Mean=</span><span class="fu">weighted.mean</span>(Mean, Weight),</span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a>                           <span class="at">SD=</span><span class="fu">weighted.mean</span>(SD, Weight),</span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a>                           <span class="at">Mode=</span>Mode[Weight<span class="sc">==</span><span class="fu">max</span>(Weight)]),</span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a>                    <span class="at">by=</span><span class="fu">list</span>(Variable, Site.Key)])</span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a><span class="co"># Convert to wide format</span></span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a>Soils <span class="ot">&lt;-</span> <span class="fu">dcast</span>(Soils, Site.Key<span class="sc">~</span>Variable, <span class="at">value.var=</span><span class="fu">c</span>(<span class="st">&quot;Median&quot;</span>, <span class="st">&quot;Mean&quot;</span>, <span class="st">&quot;SD&quot;</span>, <span class="st">&quot;Mode&quot;</span>))</span></code></pre></div>
+</div>
+<div id="merging-climate-and-soil-data-with-era" class="section level2">
+<h2>Merging Climate and Soil Data with ERA</h2>
+<p>Here we merge the climate and soil data with the ERA data to create
+integrated datasets.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="do">### Prepare Long Term and Observed Climate data</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>Clim.Data <span class="ot">&lt;-</span> Seasonal[[<span class="st">&quot;Observed&quot;</span>]]</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>Clim.Data <span class="ot">&lt;-</span> Clim.Data[ID <span class="sc">%in%</span> era_ids, ]</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co"># Create merge keys</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>Clim.Data[, MCode<span class="sc">:=</span><span class="fu">paste</span>(ID, EU, PD.Used, <span class="at">sep=</span><span class="st">&quot;|&quot;</span>)]</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>DATA[, MCode<span class="sc">:=</span><span class="fu">paste</span>(Site.Key, EU, P.Date.Merge, <span class="at">sep=</span><span class="st">&quot;|&quot;</span>)]</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>LTAvg.Clim.Data <span class="ot">&lt;-</span> Seasonal[[<span class="st">&quot;LongTerm&quot;</span>]][[<span class="st">&quot;LT.Clim.Avg&quot;</span>]]</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>LTAvg.Clim.Data <span class="ot">&lt;-</span> LTAvg.Clim.Data[ID <span class="sc">%in%</span> era_ids]</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co"># Create long-term climate merge keys</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>LTAvg.Clim.Data[, MCode.LT<span class="sc">:=</span><span class="fu">paste</span>(ID, EU, Season)]</span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>Clim.Data[, MCode.LT<span class="sc">:=</span><span class="fu">paste</span>(ID, EU, Season)]</span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="do">### Merge Climate &amp; Soil Data with ERA for each window</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>ERA.Clim.Soil <span class="ot">&lt;-</span> <span class="fu">lapply</span>(Clim.Data[, <span class="fu">unique</span>(W.Name)], <span class="at">FUN=</span><span class="cf">function</span>(X){</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a>  </span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>  <span class="co"># Subset seasonal climate data to calculation window X</span></span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>  CData <span class="ot">&lt;-</span> Clim.Data[W.Name<span class="sc">==</span>X]</span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>  </span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>  <span class="co"># Subset long-term climate averages</span></span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a>  LT.Clim.Data <span class="ot">&lt;-</span> LTAvg.Clim.Data[W.Name<span class="sc">==</span>X]</span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a>  LT.Clim.Data.Mean <span class="ot">&lt;-</span> LT.Clim.Data[Variable<span class="sc">==</span><span class="st">&quot;Mean&quot;</span>]</span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a>  LT.Clim.Data.Median <span class="ot">&lt;-</span> LT.Clim.Data[Variable<span class="sc">==</span><span class="st">&quot;Median&quot;</span>]</span>
+<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a>  </span>
+<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a>  <span class="co"># Select columns for deviation calculation</span></span>
+<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a>  Cols <span class="ot">&lt;-</span> <span class="fu">colnames</span>(CData[, <span class="sc">!</span><span class="fu">c</span>(<span class="st">&quot;Tmax.sd&quot;</span>, <span class="st">&quot;Tmean.sd&quot;</span>, <span class="st">&quot;PD.Used&quot;</span>, <span class="st">&quot;W.Start&quot;</span>, <span class="st">&quot;W.End&quot;</span>, </span>
+<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a>                             <span class="st">&quot;W.Name&quot;</span>, <span class="st">&quot;ID&quot;</span>, <span class="st">&quot;M.Year&quot;</span>, <span class="st">&quot;Season&quot;</span>, <span class="st">&quot;MCode&quot;</span>, <span class="st">&quot;MCode.LT&quot;</span>, </span>
+<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a>                             <span class="st">&quot;EU&quot;</span>, <span class="st">&quot;ETo.NA&quot;</span>)])</span>
+<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a>  </span>
+<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a>  <span class="co"># Calculate deviations from long-term averages</span></span>
+<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a>  Mean.Diff <span class="ot">&lt;-</span> CData[, ..Cols] <span class="sc">-</span> </span>
+<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a>    LT.Clim.Data.Mean[<span class="fu">match</span>(CData[, MCode.LT], LT.Clim.Data.Mean[, MCode.LT])][, ..Cols]</span>
+<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a>  Median.Diff <span class="ot">&lt;-</span> CData[, ..Cols] <span class="sc">-</span> </span>
+<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a>    LT.Clim.Data.Median[<span class="fu">match</span>(CData[, MCode.LT], LT.Clim.Data.Median[, MCode.LT])][, ..Cols]</span>
+<span id="cb6-37"><a href="#cb6-37" tabindex="-1"></a>  </span>
+<span id="cb6-38"><a href="#cb6-38" tabindex="-1"></a>  <span class="co"># Rename deviation columns</span></span>
+<span id="cb6-39"><a href="#cb6-39" tabindex="-1"></a>  <span class="fu">colnames</span>(Mean.Diff) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="fu">colnames</span>(Mean.Diff), <span class="st">&quot;.Dev.Mean&quot;</span>)</span>
+<span id="cb6-40"><a href="#cb6-40" tabindex="-1"></a>  <span class="fu">colnames</span>(Median.Diff) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="fu">colnames</span>(Median.Diff), <span class="st">&quot;.Dev.Median&quot;</span>)</span>
+<span id="cb6-41"><a href="#cb6-41" tabindex="-1"></a>  </span>
+<span id="cb6-42"><a href="#cb6-42" tabindex="-1"></a>  <span class="co"># Join data</span></span>
+<span id="cb6-43"><a href="#cb6-43" tabindex="-1"></a>  CData <span class="ot">&lt;-</span> <span class="fu">cbind</span>(CData, Mean.Diff, Median.Diff)</span>
+<span id="cb6-44"><a href="#cb6-44" tabindex="-1"></a>  SoilData <span class="ot">&lt;-</span> Soils[<span class="fu">match</span>(DATA[, Site.Key], Site.Key)]</span>
+<span id="cb6-45"><a href="#cb6-45" tabindex="-1"></a>  </span>
+<span id="cb6-46"><a href="#cb6-46" tabindex="-1"></a>  <span class="co"># Combine all data</span></span>
+<span id="cb6-47"><a href="#cb6-47" tabindex="-1"></a>  <span class="fu">cbind</span>(DATA, </span>
+<span id="cb6-48"><a href="#cb6-48" tabindex="-1"></a>        CData[<span class="fu">match</span>(DATA<span class="sc">$</span>MCode, MCode), <span class="sc">!</span><span class="fu">c</span>(<span class="st">&quot;MCode&quot;</span>, <span class="st">&quot;EU&quot;</span>, <span class="st">&quot;ID&quot;</span>)], </span>
+<span id="cb6-49"><a href="#cb6-49" tabindex="-1"></a>        SoilData[, <span class="sc">!</span><span class="st">&quot;Site.Key&quot;</span>])</span>
+<span id="cb6-50"><a href="#cb6-50" tabindex="-1"></a>})</span>
+<span id="cb6-51"><a href="#cb6-51" tabindex="-1"></a></span>
+<span id="cb6-52"><a href="#cb6-52" tabindex="-1"></a><span class="co"># Name list elements</span></span>
+<span id="cb6-53"><a href="#cb6-53" tabindex="-1"></a><span class="fu">names</span>(ERA.Clim.Soil) <span class="ot">&lt;-</span> <span class="fu">unique</span>(Clim.Data<span class="sc">$</span>W.Name)</span></code></pre></div>
+</div>
+<div id="creating-long-format-datasets" class="section level2">
+<h2>Creating Long Format Datasets</h2>
+<p>Convert the wide format datasets to long format for each estimation
+method. Four climate datasets were produced based on the calculation
+period: - data_ERA.Clim: Only use observations that report planting and
+harvest date. Climate factors are computed using these dates. -
+EcoCrop_ERA.Clim: Use reported planting and harvest date. Estimate dates
+for the rest of the observations (see Methods section). Climate factors
+are computed using these dates. - Plant1_30_ERA.Clim: Use reported
+planting and harvest date. Estimate dates for the rest of the
+observations (see Methods section). Climate factors are computed from
+planting date to 30 days after planting. - PreSowing_ERA.Clim: Use
+reported planting and harvest date. Estimate dates for the rest of the
+observations (see Methods section). Climate factors are computed from 30
+days before planting to planting date.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Convert to long format</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>data_ERA.Clim.Soil <span class="ot">&lt;-</span> <span class="fu">ERAWide2Long_mod</span>(ERA.Clim.Soil<span class="sc">$</span>Data)</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>EcoCrop_ERA.Clim.Soil <span class="ot">&lt;-</span> <span class="fu">ERAWide2Long_mod</span>(ERA.Clim.Soil<span class="sc">$</span>EcoCrop)</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>Plant1_30_ERA.Clim.Soil <span class="ot">&lt;-</span> <span class="fu">ERAWide2Long_mod</span>(ERA.Clim.Soil<span class="sc">$</span><span class="st">`</span><span class="at">Plant.1-30</span><span class="st">`</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>PreSowing_ERA.Clim.Soil <span class="ot">&lt;-</span> <span class="fu">ERAWide2Long_mod</span>(ERA.Clim.Soil<span class="sc">$</span>PreSowing)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co"># Remove duplicate columns</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>unique_cols <span class="ot">&lt;-</span> <span class="sc">!</span><span class="fu">duplicated</span>(<span class="fu">names</span>(data_ERA.Clim.Soil))</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>data_ERA.Clim.Soil <span class="ot">&lt;-</span> data_ERA.Clim.Soil[, ..unique_cols]</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>unique_cols <span class="ot">&lt;-</span> <span class="sc">!</span><span class="fu">duplicated</span>(<span class="fu">names</span>(EcoCrop_ERA.Clim.Soil))</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>EcoCrop_ERA.Clim.Soil <span class="ot">&lt;-</span> EcoCrop_ERA.Clim.Soil[, ..unique_cols]</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>unique_cols <span class="ot">&lt;-</span> <span class="sc">!</span><span class="fu">duplicated</span>(<span class="fu">names</span>(Plant1_30_ERA.Clim.Soil))</span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>Plant1_30_ERA.Clim.Soil <span class="ot">&lt;-</span> Plant1_30_ERA.Clim.Soil[, ..unique_cols]</span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>unique_cols <span class="ot">&lt;-</span> <span class="sc">!</span><span class="fu">duplicated</span>(<span class="fu">names</span>(PreSowing_ERA.Clim.Soil))</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>PreSowing_ERA.Clim.Soil <span class="ot">&lt;-</span> PreSowing_ERA.Clim.Soil[, ..unique_cols]</span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co"># Remove duplicates</span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>data_ERA.Clim.Soil <span class="ot">&lt;-</span> <span class="fu">unique</span>(data_ERA.Clim.Soil)</span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>EcoCrop_ERA.Clim.Soil <span class="ot">&lt;-</span> <span class="fu">unique</span>(EcoCrop_ERA.Clim.Soil)</span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>Plant1_30_ERA.Clim.Soil <span class="ot">&lt;-</span> <span class="fu">unique</span>(Plant1_30_ERA.Clim.Soil)</span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>PreSowing_ERA.Clim.Soil <span class="ot">&lt;-</span> <span class="fu">unique</span>(PreSowing_ERA.Clim.Soil)</span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a></span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co"># Rename column in presowing dataset</span></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="fu">setnames</span>(PreSowing_ERA.Clim.Soil, <span class="st">&quot;Rain.sum&quot;</span>, <span class="st">&quot;Presowing.Rain.sum&quot;</span>)</span></code></pre></div>
+</div>
+<div id="final-data-processing-and-export" class="section level2">
+<h2>Final Data Processing and Export</h2>
+<p>Process each dataset to handle NA values, convert units, and filter
+outliers before exporting.</p>
+<p>The presowing dataset (PreSowing_ERA.Clim) is modified to include all
+climate factors in EcoCrop_ERA.Clim.Soil and the presowing total
+rainfall is added.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="do">### Process and export each dataset</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>datasets <span class="ot">=</span> <span class="fu">list</span>(data_ERA.Clim.Soil, EcoCrop_ERA.Clim.Soil, </span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>                Plant1_30_ERA.Clim.Soil, PreSowing_ERA.Clim.Soil)</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>datasets_names <span class="ot">=</span> <span class="fu">list</span>(<span class="st">&quot;data_ERA_Clim_Soil&quot;</span>, <span class="st">&quot;EcoCrop_ERA_Clim_Soil&quot;</span>, </span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>                      <span class="st">&quot;Plant1_30_ERA_Clim_Soil&quot;</span>, <span class="st">&quot;PreSowing_ERA_Clim_Soil&quot;</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(datasets)){</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>  dataset <span class="ot">&lt;-</span> datasets[[i]]</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>  dataset_name <span class="ot">&lt;-</span> datasets_names[[i]]</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>  dataset <span class="ot">&lt;-</span> dataset[, .SD, .SDcols <span class="ot">=</span> <span class="fu">unique</span>(<span class="fu">names</span>(dataset))]</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>  </span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>  <span class="co"># Add presowing rainfall to other datasets</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>  <span class="cf">if</span> (dataset_name <span class="sc">!=</span> <span class="st">&quot;PreSowing_ERA_Clim_Soil&quot;</span>){</span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>    <span class="fu">setkey</span>(dataset, Site.Key, TID, Code, T.Descrip, MeanT)</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>    <span class="fu">setkey</span>(PreSowing_ERA.Clim.Soil, Site.Key, TID, Code, T.Descrip, MeanT)</span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>    copy <span class="ot">&lt;-</span> <span class="fu">copy</span>(dataset)</span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>    copy[PreSowing_ERA.Clim.Soil, Presowing.Rain.sum <span class="sc">:=</span> i.Presowing.Rain.sum]</span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>    dataset <span class="ot">&lt;-</span> copy</span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>    predictors <span class="ot">&lt;-</span> <span class="fu">colnames</span>(dataset)[<span class="fu">c</span>(<span class="dv">128</span><span class="sc">:</span><span class="dv">160</span>, <span class="dv">161</span><span class="sc">:</span><span class="dv">210</span>, <span class="dv">211</span><span class="sc">:</span><span class="dv">283</span>)]</span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>    predictors <span class="ot">&lt;-</span> <span class="fu">append</span>(predictors, <span class="fu">colnames</span>(dataset)[<span class="fu">length</span>(<span class="fu">colnames</span>(dataset))])  </span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>  } <span class="cf">else</span>{</span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>    predictors <span class="ot">&lt;-</span> <span class="fu">colnames</span>(dataset)[<span class="fu">c</span>(<span class="dv">128</span><span class="sc">:</span><span class="dv">160</span>, <span class="dv">161</span><span class="sc">:</span><span class="dv">210</span>, <span class="dv">211</span><span class="sc">:</span><span class="dv">283</span>)]</span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a>  }</span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>  </span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>  <span class="co"># Remove rows with NA in predictors</span></span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a>  dataset_noNA <span class="ot">&lt;-</span> dataset[<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">get</span>(predictors[<span class="dv">1</span>])) <span class="sc">&amp;</span> </span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a>                           <span class="fu">rowSums</span>(<span class="fu">is.na</span>(dataset[, ..predictors])) <span class="sc">==</span> <span class="dv">0</span>]</span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a>  </span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a>  <span class="co"># Convert to data.frame and add USDA soil texture</span></span>
+<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a>  dataset_noNA_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(dataset_noNA)</span>
+<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a>  dataset_noNA_df <span class="ot">&lt;-</span> dataset_noNA_df <span class="sc">%&gt;%</span></span>
+<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Soil.Texture.USDA =</span> <span class="fu">sapply</span>(Soil.Texture, map_to_usda_texture))</span>
+<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a>  </span>
+<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a>  <span class="co"># Convert units</span></span>
+<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a>  dataset_noNA_df <span class="ot">&lt;-</span> <span class="fu">ERA_convert_units</span>(dataset_noNA_df)</span>
+<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a>  </span>
+<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a>  <span class="co"># Create histogram</span></span>
+<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a>  <span class="fu">hist</span>(dataset_noNA_df<span class="sc">$</span>MeanT, <span class="at">main=</span>dataset_name)</span>
+<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a>  </span>
+<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a>  <span class="co"># Check low yields</span></span>
+<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a>  low_yields <span class="ot">&lt;-</span> dataset_noNA_df <span class="sc">%&gt;%</span> <span class="fu">filter</span>(MeanT<span class="sc">&lt;</span><span class="dv">100</span>) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(MeanT)</span>
+<span id="cb8-42"><a href="#cb8-42" tabindex="-1"></a>  <span class="fu">hist</span>(low_yields<span class="sc">$</span>MeanT, <span class="at">main=</span><span class="fu">paste</span>(dataset_name, <span class="st">&quot;Low yields&quot;</span>))</span>
+<span id="cb8-43"><a href="#cb8-43" tabindex="-1"></a>  </span>
+<span id="cb8-44"><a href="#cb8-44" tabindex="-1"></a>  <span class="co"># Apply filters (except for presowing dataset)</span></span>
+<span id="cb8-45"><a href="#cb8-45" tabindex="-1"></a>  <span class="cf">if</span> (dataset_name <span class="sc">!=</span> <span class="st">&quot;PreSowing_ERA_Clim_Soil&quot;</span>){</span>
+<span id="cb8-46"><a href="#cb8-46" tabindex="-1"></a>    dataset_noNA_df <span class="ot">&lt;-</span> dataset_noNA_df <span class="sc">%&gt;%</span></span>
+<span id="cb8-47"><a href="#cb8-47" tabindex="-1"></a>      <span class="fu">filter</span>(<span class="sc">!</span>MeanT <span class="sc">&lt;</span> <span class="dv">100</span>,</span>
+<span id="cb8-48"><a href="#cb8-48" tabindex="-1"></a>             Rain.sum <span class="sc">&gt;</span> <span class="dv">100</span>)</span>
+<span id="cb8-49"><a href="#cb8-49" tabindex="-1"></a>  }</span>
+<span id="cb8-50"><a href="#cb8-50" tabindex="-1"></a>  </span>
+<span id="cb8-51"><a href="#cb8-51" tabindex="-1"></a>  <span class="co"># Rename yield column</span></span>
+<span id="cb8-52"><a href="#cb8-52" tabindex="-1"></a>  dataset_noNA_df <span class="ot">&lt;-</span> dataset_noNA_df <span class="sc">%&gt;%</span></span>
+<span id="cb8-53"><a href="#cb8-53" tabindex="-1"></a>    <span class="fu">rename</span>(<span class="at">yield =</span> MeanT)</span>
+<span id="cb8-54"><a href="#cb8-54" tabindex="-1"></a>  </span>
+<span id="cb8-55"><a href="#cb8-55" tabindex="-1"></a>  <span class="co"># Export datasets</span></span>
+<span id="cb8-56"><a href="#cb8-56" tabindex="-1"></a>  <span class="fu">write_csv</span>(dataset_noNA_df, <span class="fu">paste0</span>(<span class="st">&quot;outputs/era/psw_&quot;</span>, dataset_name, <span class="st">&quot;.csv&quot;</span>))</span>
+<span id="cb8-57"><a href="#cb8-57" tabindex="-1"></a>  <span class="fu">saveRDS</span>(dataset_noNA_df, <span class="at">file=</span><span class="fu">paste0</span>(<span class="st">&quot;outputs/era/psw_&quot;</span>, dataset_name, <span class="st">&quot;.rds&quot;</span>))</span>
+<span id="cb8-58"><a href="#cb8-58" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div id="additional-data-checks" class="section level2">
+<h2>Additional Data Checks</h2>
+<p>Perform a few additional checks on yields to identify potential
+issues.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="do">### Additional data quality checks</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">count</span>(dataset_noNA_df <span class="sc">%&gt;%</span> <span class="fu">filter</span>(yield <span class="sc">&lt;</span> <span class="dv">1000</span>) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(yield))</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co"># Check experiments with low yields</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>low_yield_codes <span class="ot">&lt;-</span> <span class="fu">unique</span>(dataset_noNA_df <span class="sc">%&gt;%</span> <span class="fu">filter</span>(yield <span class="sc">&lt;</span> <span class="dv">1000</span>) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(Code))</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>low_yield_exp <span class="ot">&lt;-</span> dataset_noNA_df <span class="sc">%&gt;%</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>  <span class="fu">filter</span>(Code <span class="sc">%in%</span> low_yield_codes<span class="sc">$</span>Code) <span class="sc">%&gt;%</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(Code, yield, TorC)</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co"># Check consistently low yield experiments (may be due to units)</span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>consistent_low_yield_exp <span class="ot">&lt;-</span> dataset_noNA_df <span class="sc">%&gt;%</span></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>  <span class="fu">group_by</span>(Code) <span class="sc">%&gt;%</span></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">all</span>(yield <span class="sc">&lt;</span> <span class="dv">1000</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(Code, yield, TorC, OriUnits)</span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a></span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a><span class="co"># Check specific experiment</span></span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>DATA <span class="sc">%&gt;%</span> <span class="fu">filter</span>(Code <span class="sc">==</span> <span class="st">&quot;NN0297&quot;</span>) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(MeanT, MeanC, Code, Units)</span></code></pre></div>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>This vignette demonstrates a comprehensive workflow for processing
+and analyzing maize yield data in relation to climate and soil factors.
+The resulting datasets can be used for further analysis, modeling, and
+visualization to understand the impacts of various environmental factors
+on maize yields.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
