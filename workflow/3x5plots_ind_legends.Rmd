@@ -1,6 +1,6 @@
 ---
-title: "Understanding the ERA SHAP Beeswarm Grid Visualization Script"
-author: "ERA Visualization Guide"
+title: "SHAP interaction plots"
+author: "Álvaro Carmona-Cabrero"
 date: "`r Sys.Date()`"
 output: 
   html_document:
@@ -16,14 +16,14 @@ knitr::opts_chunk$set(eval = FALSE, echo = TRUE)
 
 # Introduction
 
-This document explains the R script used to create a grid of SHAP (SHapley Additive exPlanations) beeswarm plots for the ERA (Evidence for Resilient Agriculture) project. The script generates a comprehensive visualization showing how climate variables affect crop yields across different Warm Agro-Ecological Zones (AEZs) in Africa. A parallel script follows the same approach for Cool AEZs.
+This document explains the R script used to create a grid of SHAP (SHapley Additive exPlanations) beeswarm plots for the ERA dataset. The script generates a comprehensive visualization showing how climate variables affect crop yields across different Warm Agro-Ecological Zones (AEZs) in Africa. A parallel script follows the same approach for Cool AEZs.
 
 # Script Overview
 
 The script creates a 3×5 grid of visualizations where:
 - Each row represents a different Agro-Ecological Zone (Semiarid, Subhumid, Humid)
 - The first column shows feature importance plots for each zone
-- Columns 2-5 show SHAP beeswarm plots for the most important climate variables
+- Columns 2-5 show SHAP beeswarm plots for selected climate variables
 - Each SHAP plot shows the relationship between a climate feature and yield, colored by another feature to reveal interactions
 
 This grid layout enables researchers to compare climate-yield relationships across different ecological regions while highlighting key interaction effects.
@@ -83,7 +83,7 @@ R2 <- numeric(length(zones))
 n_obs <- numeric(length(zones))
 ```
 
-The script begins by defining the experiment name and selecting the "Warm" AEZ temperature regime. It also specifies the type of SHAP plot to use (`GAMCI_shap_plot_` uses Generalized Additive Models to fit confidence bands).
+The script begins by defining the experiment name and selecting the "Warm" AEZ temperature regime. It also specifies the type of SHAP plot to use (`GAMCI_shap_plot_` uses Generalized Additive Models to fit the general trend of the confidence bands).
 
 # Loading Performance Metrics
 
@@ -108,8 +108,6 @@ for (i in seq_along(zones)) {
 }
 ```
 
-This section loads the model performance metrics (R² values) and the number of observations for each AEZ. These metrics will be displayed on the feature importance plots to provide context for the model's predictive power.
-
 # Loading Feature Importance Plots
 
 ```{r importance_plots}
@@ -132,11 +130,7 @@ levels(shap_plot3$data$feature) <- gsub("_", " ",
                                         levels(shap_plot3$data$feature))
 ```
 
-This code loads the feature importance plots for each AEZ from previously saved RDS files. These plots show which climate variables have the strongest influence on yield predictions in each zone. The feature names are also made more readable by replacing underscores with spaces.
-
 # Defining SHAP Plot Paths
-
-The script then defines the paths to the SHAP beeswarm plots for each AEZ and feature combination. For each AEZ (Semiarid, Subhumid, Humid), it selects four key climate variables and pairs them with interaction variables.
 
 ```{r define_paths_row1}
 plot_titles <- c()
@@ -162,9 +156,9 @@ plot_titles <- append(plot_titles, paste0("", spell_out_features(feature2)))
 # Additional titles...
 ```
 
-Similar code blocks define paths for rows 2 (Subhumid) and 3 (Humid). For each feature pair, the script also creates a human-readable title using the `spell_out_features()` function.
-
 # Loading SHAP Plots
+
+After defining all paths, the script loads the actual SHAP beeswarm plots from their RDS files. Each plot shows how a specific climate variable affects crop yield, with points colored by another variable to reveal interaction effects.
 
 ```{r load_shap_plots}
 # Load all SHAP beeswarm plots from their RDS files
@@ -173,9 +167,10 @@ beeswarm_plot12 <- readRDS(file = path_beeswarm_plot12)
 # ... additional plot loading ...
 ```
 
-After defining all paths, the script loads the actual SHAP beeswarm plots from their RDS files. Each plot shows how a specific climate variable affects crop yield, with points colored by another variable to reveal interaction effects.
-
 # Standardizing Y-Axis Scales
+
+To ensure that all plots are directly comparable, the script calculates the minimum and maximum y-values across all SHAP plots. It also determines the maximum x-value for the feature importance plots. These values will be used to set consistent scales across all visualizations.
+
 
 ```{r standardize_scales}
 # Find the common y-range for all plots
@@ -196,7 +191,6 @@ imp_x_max <- max(c(ggplot_build(shap_plot1)$layout$panel_params[[1]]$x.range[2],
 ))
 ```
 
-To ensure that all plots are directly comparable, the script calculates the minimum and maximum y-values across all SHAP plots. It also determines the maximum x-value for the feature importance plots. These values will be used to set consistent scales across all visualizations.
 
 # Customizing Individual Plots
 
@@ -316,8 +310,6 @@ ggsave(
 )
 ```
 
-Finally, the script saves the combined visualization as a high-resolution PNG file. The filename includes the plot type and temperature regime.
-
 # Understanding the Visualization
 
 The final grid visualization provides multiple layers of information:
@@ -344,19 +336,6 @@ The final grid visualization provides multiple layers of information:
 - Row 2: Subhumid zones
 - Row 3: Humid zones
 
-This enables researchers to see how climate-yield relationships change across moisture gradients.
-
 # Parallel Script for Cool AEZs
 
-There is a similar script that follows the same approach to create an equivalent visualization for the Cool AEZs (Cool Semiarid, Cool Subhumid, Cool Humid). Together, these visualizations provide a comprehensive view of climate-yield relationships across the major agro-ecological zones of Africa.
-
-# Conclusion
-
-This visualization script creates a powerful tool for understanding how climate variables affect crop yields across different agro-ecological zones. By combining feature importance plots with SHAP beeswarm plots arranged by AEZ, it enables researchers to:
-
-1. Identify the most important climate drivers of yield in each region
-2. Understand how these drivers' effects vary with their magnitude
-3. Detect important interaction effects between climate variables
-4. Compare patterns across different ecological zones
-
-The resulting visualization serves as both an analytical tool for researchers and a communication tool for stakeholders working on agricultural resilience in a changing climate.
+There is a similar script that follows the same approach to create an equivalent visualization for the Cool AEZs (Cool Semiarid, Cool Subhumid, Cool Humid). 
