@@ -52,7 +52,9 @@ pacman::p_load(data.table, miceadds, dplyr, ERAgON, tidyverse)
 
 ## Processing Climate Data
 
-The next section processes climate data if the flag is set to TRUE. Notice that this parquet file is required to conduct the analysis "../databases/ERA/POWER.CHIRPS.parquet". It should be available in the Zenodo repository https://zenodo.org/records/15241882?token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6IjM0ODEwZDQzLThlYTItNDhhNC1hMDQ1LTIyMGRhMDZjYTI1NSIsImRhdGEiOnt9LCJyYW5kb20iOiJhNzk3OGE1NDQ5OTdjZjJlOGE3NzBkYmMwY2UxYzA2YiJ9.xc71ZaDofsfqKM2lYTT_8Ev227W_-_ddyB_0B3zwOxPiwIOPCHywv3XzBdu5HbNyoihWpIaUajIB2-ciCAxJjQ.
+The next section processes climate data if the flag is set to TRUE. Notice that this parquet file is required to conduct the analysis "../databases/ERA/POWER.CHIRPS.parquet". It should be available in the [Zenodo record][zenodo-link].
+
+[zenodo-link]: https://zenodo.org/records/15241882?token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6IjM0ODEwZDQzLThlYTItNDhhNC1hMDQ1LTIyMGRhMDZjYTI1NSIsImRhdGEiOnt9LCJyYW5kb20iOiJhNzk3OGE1NDQ5OTdjZjJlOGE3NzBkYmMwY2UxYzA2YiJ9.xc71ZaDofsfqKM2lYTT_8Ev227W_-_ddyB_0B3zwOxPiwIOPCHywv3XzBdu5HbNyoihWpIaUajIB2-ciCAxJjQ.
 
 ```{r climate-processing, eval=FALSE}
 if (PROCESS_CLIMATE_FILES == TRUE){
