@@ -20,7 +20,9 @@ knitr::opts_chunk$set(eval = FALSE, echo = TRUE)
 
 # Introduction
 
-This vignette explains the ERA (Evidence for Resilient Agriculture) data analysis script provided. The script performs a comprehensive analysis of agricultural yield data across different Agro-Ecological Zones (AEZs) in Africa using bootstrap resampling to quantify uncertainty in predictions and feature importance.
+This script performs a comprehensive analysis of agricultural yield data across different Agro-Ecological Zones (AEZs) in Africa using the *tidymodels* framework and implementing bootstrap resampling to quantify uncertainty in predictions and feature importance.
+
+No tuning is done in this script for simplicity and saving data. The parameter tuning was done previously in the *workflow.R* script using a Cross-Validation Grid Search scheme.
 
 # Script Structure and Workflow
 
@@ -119,6 +121,8 @@ full_results <- list(
 
 ### Formula and Parameter Extraction
 
+This part obtaines the parameters of the analysis from the config file.
+
 ```{r formula_processing}
 # Extract parameters from configuration
 data_path <- config$data_path    # Path to input data
@@ -190,6 +194,8 @@ experiment <- paste0(experiment, "_", AEZ)  # Update experiment name with AEZ
 
 ### Model Preparation and Training
 
+This part sets up weights and weight functions and splits the data into training and testing.
+
 ```{r model_preparation}
 # The script focuses on Random Forest (model_i = 2 in the config)
 model_i <- 2
@@ -235,6 +241,8 @@ if (weighted) {
 
 ### Recipe Creation and Model Training
 
+A recipe is created for model training and the Random Forest model is trained.
+
 ```{r recipe_creation}
 # Create recipe for data preprocessing
 recipe <- create_recipe(
@@ -267,6 +275,8 @@ final_workflow <- train_simple_rf(
 ```
 
 ### Model Evaluation and Feature Importance
+
+The model performance is evaluated and variable importance (MDA) is estimated.
 
 ```{r model_evaluation}
 # Calculate performance metrics on training and test data
@@ -314,11 +324,7 @@ scatter_plot <- create_and_save_obs_pred_plot(
   experiment = experiment_t,
   AEZ = AEZ
 )
-```
 
-### Saving Results and Cross-Validation
-
-```{r save_results}
 # Store all results from the full model
 full_results$feature_importance <- full_MDA_importance
 full_results$train_metrics <- all_metrics$train_metrics
@@ -351,7 +357,7 @@ saveRDS(cv_results, file = file.path(cv_output_dir, "cv_results.rds"))
 
 ### Bootstrap Analysis Loop
 
-The most critical part of the script is the bootstrap loop, which quantifies uncertainty in the model predictions and feature importance:
+The bootstrap loop quantifies SHAP uncertainty in the model predictions and feature importance:
 
 ```{r bootstrap_loop}
 # Bootstrap loop - the heart of the uncertainty quantification
@@ -430,6 +436,8 @@ saveRDS(bootstrap_results, file = file.path(output_dir_results, "bootstrap_resul
 ```
 
 ### SHAP Plot Generation
+
+SHAP beeswarm plots generation that include the visualization of factor interactions. SHAP hexbins are produced in another script.
 
 ```{r shap_plotting}
 # Extract feature list from formula
@@ -617,21 +625,7 @@ The script relies on numerous custom functions from external R files. Here are e
 
 * `create_performance_table`: Creates summary tables of model performance across all AEZs.
 
-# Key Components of the Analysis
-
-## 1. Bootstrap Resampling
-
-The core of the analysis is the bootstrap resampling approach, which involves:
-
-1. Creating 99 bootstrap samples by sampling with replacement from the training data
-2. Training a Random Forest model on each bootstrap sample
-3. Evaluating each model on both its bootstrap sample and the holdout test set
-4. Computing SHAP values for each model
-5. Using these results to quantify uncertainty in predictions and feature importance
-
-This approach provides robust estimates of model performance and feature effects, including confidence intervals that account for data variability.
-
-## 2. SHAP Analysis
+# SHAP Analysis
 
 SHAP (SHapley Additive exPlanations) values explain model predictions by showing:
 
@@ -642,7 +636,7 @@ SHAP (SHapley Additive exPlanations) values explain model predictions by showing
 
 The script creates multiple types of SHAP visualizations to explore these relationships from different angles.
 
-## 3. AEZ Comparison
+# AEZ Comparison
 
 By running the analysis separately for each AEZ, the script enables:
 
@@ -662,25 +656,3 @@ The script produces several types of outputs:
 2. **Feature Importance Rankings**: Which factors most strongly influence yield predictions, with uncertainty estimates.
 
 3. **SHAP Interaction Plots**: How one feature's effect changes based on another feature's value (e.g., how the effect of rainfall varies with temperature).
-
-4. **Uncertainty Visualization**: Confidence bands showing the reliability of feature effects across bootstrap samples.
-
-These outputs help researchers understand:
-
-- The predictability of agricultural yields in different regions
-- Key factors driving yield variability
-- How environmental variables interact to affect yields
-- The reliability of these insights given data limitations
-
-# Conclusion
-
-The ERA data analysis script provides a comprehensive framework for analyzing agricultural yield data with uncertainty quantification. By using bootstrap resampling and SHAP values, it goes beyond simple prediction to provide robust insights into the relationships between environmental factors and crop yields across different agro-ecological zones.
-
-This analysis can help inform:
-
-- Region-specific agricultural management strategies
-- Climate adaptation approaches for agriculture
-- Research priorities for improving crop resilience
-- Policy development for agricultural sustainability
-
-The script's modular design allows for easy adaptation to different datasets, regions, or research questions within the agricultural domain.
