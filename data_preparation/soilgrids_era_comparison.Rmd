@@ -37,10 +37,12 @@ library(tidyverse)
 library(ggplot2)
 library(corrplot)
 library(data.table)
+library(arrow)
 
 # Load dataset
-data <- read.csv("outputs/era/base_ecocrop.csv")
+data <- read_parquet("outputs/era/base_ecocrop.parquet")
 data <- unique(data)
+
 
 # pH correction (dividing by 10)
 data$Mean_ph_h2o <- data$Mean_ph_h2o/10
