@@ -1,5 +1,5 @@
 ---
-title: "Understanding the ERA Climate-Yield Relationship Visualization Script"
+title: "Summary Heatmap"
 author: "ERA Visualization Guide"
 date: "`r Sys.Date()`"
 output: 
@@ -16,15 +16,13 @@ knitr::opts_chunk$set(eval = FALSE, echo = TRUE)
 
 # Introduction
 
-This document explains the R script used to create a heatmap visualization showing climate-yield relationships across different Agro-Ecological Zones (AEZs) for the ERA (Evidence for Resilient Agriculture) project. The script generates a matrix visualization where each cell represents the relationship between a climate variable and crop yield in a specific agro-ecological zone.
+This document explains the R script used to create a summary heatmap visualization showing climate-yield relationships across different Agro-Ecological Zones (AEZs).
 
 # Script Overview
 
-The script creates a sophisticated heatmap visualization that combines:
-1. Color-coded cells showing the magnitude of climate variable impacts on yield
-2. Symbols indicating the type of relationship (positive, negative, inverse-U shaped, or no relationship)
-3. Organized layout with different agro-ecological zones as columns and climate variables as rows
-4. Custom color scales for different relationship types
+The visualization combines:
+- Color-coded cells showing the magnitude of climate variable impacts on yield
+- Symbols indicating the type of relationship (positive, negative, inverse-U shaped, or no relationship)
 
 # Libraries and Dependencies
 
@@ -71,8 +69,6 @@ feature_mapping <- c(
 # Extract feature list (excluding yield)
 feature_list <- unname(feature_mapping)[-8]
 ```
-
-The script begins by setting up basic parameters, including text size, the experiment identifier, and lists of the agro-ecological zones and climate features to include in the visualization. It also defines a mapping between technical variable names and more readable names for display.
 
 # Data Processing and Impact Calculation
 
@@ -130,12 +126,12 @@ df_relationship_all <- data.frame(
 row.names(df_relationship_all) = feature_list
 ```
 
-This section defines the type of relationship between each climate variable and crop yield for each AEZ. The relationships are manually coded based on expert analysis of the SHAP plots and are categorized as:
+This section defines the type of relationship between each climate variable and crop yield for each AEZ. The relationships are manually coded:
 
 - "Positive": Increasing the variable generally increases yield
 - "Negative": Increasing the variable generally decreases yield
 - "Inverse-U": The relationship is non-linear, with yield increasing up to a point and then decreasing
-- " " (empty string): No significant relationship
+- " ": No significant relationship
 
 # Data Preparation for Visualization
 
@@ -178,12 +174,6 @@ max_value <- max(df_combined$impact_range, na.rm = TRUE)
 ```
 
 This section prepares the data for visualization:
-
-1. Reshapes the relationship data from wide to long format
-2. Merges relationship types with impact values
-3. Defines custom orderings for AEZs (organizing by temperature regime and aridity) and features (grouping related variables)
-4. Creates separate datasets for each relationship type (positive, negative, inverse-U, no relationship)
-5. Calculates the maximum impact value to ensure consistent color scaling
 
 # Creating the Visualization
 
@@ -306,9 +296,9 @@ p <- ggplot(df_combined, aes(x = AEZ, y = variable)) +
   )
 ```
 
-This section creates the heatmap visualization with several sophisticated features:
+This section creates visualization:
 
-1. **Multiple Color Scales**: Uses the `ggnewscale` package to apply different color scales for each relationship type:
+1. **Multiple Color Scales**:
    - Blue scale for positive relationships
    - Red scale for negative relationships
    - Gold/brown scale for inverse-U relationships
@@ -319,12 +309,6 @@ This section creates the heatmap visualization with several sophisticated featur
    - ↘ for negative relationships
    - ∩ for inverse-U relationships
    - - for no relationship
-
-3. **Custom Axis Labels**: Formats AEZ names and variable names for better readability
-
-4. **Consistent Color Scaling**: Uses the same scale limits across all relationship types for consistent comparison
-
-5. **Carefully Arranged Legends**: Orders and formats the legends for clarity
 
 # Saving the Visualization
 
@@ -388,30 +372,6 @@ ggsave(paste0("final_results/", experiment_t, "_climate_yield.pdf"),
 save_png_version(p, paste0("final_results/", experiment_t, "_climate_yield.png"))
 ```
 
-The final section saves the visualization in two formats:
-
-1. **PDF**: Saved at the original size (88 x 88 mm) with high resolution (600 DPI)
-2. **PNG**: Saved with a custom function that:
-   - Increases text size for better readability
-   - Enlarges the symbols for clarity
-   - Expands the overall dimensions (3x larger)
-   - Ensures a clean white background
-
-The `save_png_version()` function specifically modifies the plot to make it more suitable for web display and presentations, while the PDF version maintains a compact size suitable for publication in academic journals.
-
-# Understanding the Visualization
-
-The final heatmap offers several key insights:
-
-## Relationship Types
-
-Each cell shows one of four relationship types between a climate variable and crop yield:
-
-1. **Positive (↗, blue)**: Increasing the climate variable generally increases yield
-2. **Negative (↘, red)**: Increasing the climate variable generally decreases yield
-3. **Inverse-U (∩, gold)**: A non-linear relationship where yield increases up to an optimal point, then decreases
-4. **No relationship (-, white)**: No significant effect of the climate variable on yield
-
 ## Color Intensity
 
 The intensity of each color represents the magnitude of the impact:
@@ -427,16 +387,3 @@ The grid layout facilitates comparison across different agro-ecological zones:
 - **By row**: Compare which variables have the strongest effects within each AEZ
 - **Temperature patterns**: Compare warm vs. cool regions (adjacent columns)
 - **Moisture patterns**: Compare across moisture gradients (semiarid → subhumid → humid)
-
-# Conclusion
-
-This visualization script creates a powerful tool for understanding climate-yield relationships across different agro-ecological zones in Africa. By combining color-coding, symbols, and carefully organized data, it presents complex information in an accessible format.
-
-The resulting heatmap can help:
-
-1. **Researchers** identify key climate drivers of yield in different regions
-2. **Policymakers** understand which climate variables to prioritize in adaptation strategies
-3. **Agricultural advisors** develop region-specific recommendations for farmers
-4. **Climate scientists** see how climate variables interact with agricultural systems
-
-This type of visualization bridges the gap between complex statistical models and practical decision-making in agricultural climate adaptation.
