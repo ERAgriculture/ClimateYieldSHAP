@@ -1,6 +1,5 @@
 ---
-title: "Understanding the ERA Data Analysis with Bootstrap Resampling Script"
-author: "ERA Analysis Guide"
+title: "Contrasting Climate–Yield Response Patterns of Rainfed Maize Across Sub-Saharan African Agroecological Zones"
 date: "`r Sys.Date()`"
 output: 
   html_document:
@@ -9,18 +8,38 @@ output:
     toc_float: true
     theme: cosmo
 vignette: >
-  %\VignetteIndexEntry{ERA Data Analysis with Bootstrap Resampling}
+  %\VignetteIndexEntry{Contrasting Climate–Yield Response Patterns of Rainfed Maize Across Sub-Saharan African Agroecological Zones}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(eval = FALSE, echo = TRUE)
+setwd(here::here())
 ```
 
 # Introduction
 
-This script performs a comprehensive analysis of agricultural yield data across different Agro-Ecological Zones (AEZs) in Africa using the *tidymodels* framework and implementing bootstrap resampling to quantify uncertainty in predictions and feature importance.
+This script performs a comprehensive analysis of agricultural yield data across different Agro-Ecological Zones (AEZs) in Sub-Saharan Africa. It uses the *tidymodels* framework and bootstrap resampling to estimate uncertainty in predictions and feature importance. The code is organized for clarity and reproducibility, with settings controlled via YAML configuration files and results saved in structured outputs.
+
+The purpose of the script is to identify and explain the key climate and soil factors that drive yield variability across regions. We model maize yield as a function of several climate variables to understand how seasonal weather patterns influence productivity.
+
+
+<div style="text-align:left;">
+
+$$
+\begin{aligned}
+\text{Yield (kg/ha)} = f(& \text{Total rainfall, Rainfall deviation, Longest dry spell,} \\
+                        & \text{Fraction rainy days, Rainy days deviation,} \\
+                        & \text{Avg. max temperature, Max temperature deviation})
+\end{aligned}
+$$
+
+</div>
+
+
+Random Forests are used for their ability to model nonlinear relationships and variable interactions without requiring extensive tuning. SHAP (SHapley Additive exPlanations) values provide interpretable estimates of feature contributions to individual predictions, allowing visualization of the estimated functional relationship between climate factors and maize yield. Bootstrap resampling adds robustness by quantifying uncertainty around model performance and variable importance.
 
 No tuning is done in this script for simplicity and saving data. The parameter tuning was done previously in the *workflow.R* script using a Cross-Validation Grid Search scheme.
 
@@ -535,7 +554,17 @@ for (var in feature_list) {
 }
 ```
 
+The resulting figures will look like this:
+
+```{r, echo=FALSE, eval=TRUE, out.width='80%', fig.align='center', fig.cap='SHAP plot'}
+knitr::include_graphics("outputs/no_outliers_eco_isqrt_nosoil_Warm.Semiarid/bootstrap_plots/GAMCI_shap_plot_Total_Rainfall_Avg_Max_Temp.png")
+```
+
+This SHAP plot visualizes Total Rainfall effects on Maize Yield Change. Colored points show the influence of each observation, with colors indicating values of a secondary interacting feature (Seasonal Average Maximum Temperature). Dashed lines represent the estimated trend, grey points display effects from bootstrap models, and the y-axis zero marks the average yield for that AEZ.
+
 ### Performance Metrics Summary
+
+This code chunk summarizes model performance metrics for train, test, and out-of-bag sets, saving results for each set to separate files.
 
 ```{r performance_summary}
 # Summarize bootstrap results for different datasets
