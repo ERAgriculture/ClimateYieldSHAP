@@ -133,4 +133,4 @@ The processed data files are saved in `data_preparation/outputs/era/` directory 
 
 This work is supported by the **Alliance of Bioversity & CGIAR**.
 
-![Image](https://github.com/user-attachments/assets/ba7b10a7-2f4e-458a-b416-c3971a03f08e)
+![Image](https://github.com/user-attachments/assets/afa2f555-2d70-4eb7-b689-c9068d69f872)
