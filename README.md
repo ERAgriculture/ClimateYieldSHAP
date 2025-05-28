@@ -1,7 +1,8 @@
-# ERA Data Analysis
+# Contrasting Climate–Yield Response Patterns of Rainfed Maize Across Sub-Saharan African Agroecological Zones
 
-This repository contains scripts and tools for analyzing the Evidence for Resilient Agriculture (ERA) dataset, focusing on crop yield modeling across different Agro-Ecological Zones (AEZs) in Africa.
+This repository presents an analysis of rainfed maize yield responses to seasonal climate variability across diverse Agro-Ecological Zones (AEZs) in Sub-Saharan Africa using the Evidence for Resilient Agriculture (ERA) dataset. While the scripts and tools can be adapted to analyze any crop with minor modifications, this work focuses specifically on rainfed maize. The rainfed maize dataset includes 11,166 field trials, with 3,997 trials reporting exact planting and harvest dates, while 7,169 required estimation of growing periods. Seasonal climate factors are sourced from CHIRPS (seasonal precipitation and fraction of rainy days, their deviations, and longest dry spell) and NASA POWER (seasonal maximum temperature and its deviation). The analysis uses Random Forest models and SHAP values to disentangle climate–yield relationships. The figure below shows the geographic distribution of the trials across Africa alongside maize yield distributions by AEZ.
 
+![Trials and Maize Distribution](https://github.com/user-attachments/assets/0b2d2e4b-ce22-4552-8395-110d19cede98)
 
 ## Project Structure
 
@@ -133,4 +134,4 @@ The processed data files are saved in `data_preparation/outputs/era/` directory 
 
 This work is supported by the **Alliance Bioversity & CIAT**, a CGIAR initiative.
 
-![Image](https://github.com/user-attachments/assets/afa2f555-2d70-4eb7-b689-c9068d69f872)
+![Logo](https://github.com/user-attachments/assets/afa2f555-2d70-4eb7-b689-c9068d69f872)
