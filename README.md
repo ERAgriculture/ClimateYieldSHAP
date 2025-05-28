@@ -128,3 +128,9 @@ The processed data files are saved in `data_preparation/outputs/era/` directory 
 - Bootstrap resampling provides uncertainty quantification in model predictions and feature importance
 - The workflow can be customized through the YAML configuration files without changing the scripts except for number of bootstraps (n_bootstraps) 
 - To run the analysis from the terminal, some lines of code need to be uncommented in the RF_bootstrap_notune_workflow.R script
+
+## Acknowledgments
+
+This work is supported by the **Alliance of Bioversity & CGIAR**.
+
+![Image](https://github.com/user-attachments/assets/ba7b10a7-2f4e-458a-b416-c3971a03f08e)
