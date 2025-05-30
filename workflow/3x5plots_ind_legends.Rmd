@@ -1,6 +1,5 @@
 ---
 title: "SHAP interaction plots"
-author: "Álvaro Carmona-Cabrero"
 date: "`r Sys.Date()`"
 output: 
   html_document:
@@ -312,7 +311,13 @@ ggsave(
 
 # Understanding the Visualization
 
-The final grid visualization provides multiple layers of information:
+The final grid visualization will look like this.
+
+```{r, echo=FALSE, eval=TRUE, out.width='80%', fig.align='center', fig.cap='Warm AEZs SHAP plot with interactions'}
+knitr::include_graphics("final_results/GAMCI_shap_plot_Warm_no_outliers_combined_shap_plot_3x5_legends.png")
+```
+
+It provides multiple layers of information:
 
 ## Feature Importance (Column 1)
 - Shows which climate variables have the strongest influence on yield in each AEZ
