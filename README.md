@@ -133,5 +133,7 @@ The processed data files are saved in `data_preparation/outputs/era/` directory 
 ## Acknowledgments
 
 This work is supported by the **Alliance Bioversity & CIAT**, a CGIAR initiative.
-
+(https://eragriculture.github.io/ClimateYieldSHAP/docs/3x5plots_ind_legends.html)
+https://eragriculture.github.io/ClimateYieldSHAP/docs/RF_bootstrap_notune_workflow.html
+https://eragriculture.github.io/ClimateYieldSHAP/docs/make_hexbin_grid.html
 ![Logo](https://github.com/user-attachments/assets/afa2f555-2d70-4eb7-b689-c9068d69f872)
