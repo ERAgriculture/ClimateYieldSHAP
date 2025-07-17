@@ -130,10 +130,16 @@ The processed data files are saved in `data_preparation/outputs/era/` directory 
 - The workflow can be customized through the YAML configuration files without changing the scripts except for number of bootstraps (n_bootstraps) 
 - To run the analysis from the terminal, some lines of code need to be uncommented in the RF_bootstrap_notune_workflow.R script
 
+## HTML Links:
+
+The process and workflows mentioned above are also explained in the following HTMLs:
+SHAP interaction plots: https://eragriculture.github.io/ClimateYieldSHAP/3x5plots_ind_legends.html
+Contrasting Climate–Yield Response Patterns of Rainfed Maize Across Sub-Saharan African Agroecological Zones: https://eragriculture.github.io/ClimateYieldSHAP/RF_bootstrap_notune_workflow.html
+Understanding the ERA Hexbin SHAP Visualization Script: https://eragriculture.github.io/ClimateYieldSHAP/make_hexbin_grid.html
+
 ## Acknowledgments
 
 This work is supported by the **Alliance Bioversity & CIAT**, a CGIAR initiative.
-(https://eragriculture.github.io/ClimateYieldSHAP/3x5plots_ind_legends.html)
-https://eragriculture.github.io/ClimateYieldSHAP/RF_bootstrap_notune_workflow.html
-https://eragriculture.github.io/ClimateYieldSHAP/make_hexbin_grid.html
+()
+
 ![Logo](https://github.com/user-attachments/assets/afa2f555-2d70-4eb7-b689-c9068d69f872)
