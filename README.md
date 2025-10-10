@@ -1,5 +1,7 @@
 # Contrasting Climate–Yield Response Patterns of Rainfed Maize Across Sub-Saharan African Agroecological Zones
 
+[![DOI](https://zenodo.org/badge/970571567.svg)](https://doi.org/10.5281/zenodo.17311355)
+
 This repository presents an analysis of rainfed maize yield responses to seasonal climate variability across diverse Agro-Ecological Zones (AEZs) in Sub-Saharan Africa using the Evidence for Resilient Agriculture (ERA) dataset. While the scripts and tools can be adapted to analyze any crop with minor modifications, this work focuses specifically on rainfed maize. The rainfed maize dataset includes 11,166 field trials, with 3,997 trials reporting exact planting and harvest dates, while 7,169 required estimation of growing periods. Seasonal climate factors are sourced from CHIRPS (seasonal precipitation and fraction of rainy days, their deviations, and longest dry spell) and NASA POWER (seasonal maximum temperature and its deviation). The analysis uses Random Forest models and SHAP values to disentangle climate–yield relationships. The figure below shows the geographic distribution of the trials across Africa alongside maize yield distributions by AEZ.
 
 ![Trials and Maize Distribution](https://github.com/user-attachments/assets/0b2d2e4b-ce22-4552-8395-110d19cede98)
